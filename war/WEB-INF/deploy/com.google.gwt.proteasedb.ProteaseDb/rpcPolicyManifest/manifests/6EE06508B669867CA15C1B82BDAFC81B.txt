@@ -1,0 +1,2 @@
+serviceClass: com.google.gwt.proteasedb.client.DBConnection
+path: 767886C881349E89D4207DE48181CBFF.gwt.rpc
