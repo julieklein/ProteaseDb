@@ -4,7 +4,7 @@ import com.google.gwt.proteasedb.client.DBConnection;
 import com.google.gwt.proteasedb.client.ProteaseData;
 import com.google.gwt.proteasedb.client.ProteaseDb;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-import com.google.gwt.proteasedb.client.Input;
+import com.google.gwt.proteasedb.client.SearchRequest;
 /**
  * server side class for Async calls
  * 
@@ -25,11 +25,11 @@ public class MySQLConnection extends RemoteServiceServlet implements DBConnectio
     }
 
 	@Override
-	public ProteaseData[] getProteaseInfo() throws Throwable {
+	public ProteaseData[] getProteaseInfo(SearchRequest input) throws Throwable {
 		
 		// TODO Auto-generated method stub
 		DB_Protease db = new DB_Protease();
-		Input input = new Input();
+		
 
 		ProteaseData[] proteaseData = db.getProteaseInfo(input);
 		return proteaseData;

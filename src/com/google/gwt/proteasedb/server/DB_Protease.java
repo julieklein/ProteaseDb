@@ -6,7 +6,7 @@ import java.sql.ResultSet;
 
 
 import com.google.gwt.proteasedb.client.ProteaseData;
-import com.google.gwt.proteasedb.client.Input;
+import com.google.gwt.proteasedb.client.SearchRequest;
 
 /**
 * I extend the DB_Conn abstract class, then I don't have to rewrite code
@@ -23,7 +23,7 @@ public class DB_Protease extends DB_Conn {
     public DB_Protease() {
             // nothing to do
     }
-    public ProteaseData[] getProteaseInfo(Input input) throws Throwable {
+    public ProteaseData[] getProteaseInfo(SearchRequest input) throws Throwable {
         
         String query = "SELECT * FROM PROTEASE WHERE P_Symbol = ?";
         String symbol = input.getInput();
@@ -40,7 +40,7 @@ try {
     
 //    Statement select = connection.createStatement();
     ResultSet result = ps.executeQuery();
-    
+    ps.clearParameters();
  // init object into the size we need, like a recordset
     int rsSize = getResultSetSize(result); //size the array
     proteaseData = new ProteaseData[rsSize];

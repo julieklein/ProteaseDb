@@ -9,6 +9,6 @@ public interface DBConnectionAsync {
      * @return
 	 * @throws Throwable 
      */
-    public void getProteaseInfo(AsyncCallback<ProteaseData[]> callback);
+    public void getProteaseInfo(SearchRequest inputObject, AsyncCallback<ProteaseData[]> callback);
 
 }

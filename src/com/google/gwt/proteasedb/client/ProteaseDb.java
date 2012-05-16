@@ -60,9 +60,9 @@ public class ProteaseDb implements EntryPoint {
 	    searchButton.addClickHandler(new ClickHandler() {
 	      public void onClick(ClickEvent event) {
 	    	//keep search to setup prepared statement
-	    	  getPreparedStatement();
+	    	  generateSearchRequest();
 	    	  //start the process
-	          getProteaseInfo();
+	         
 	    	
 	      }
 	    });
@@ -71,9 +71,9 @@ public class ProteaseDb implements EntryPoint {
 	    searchBox.addKeyPressHandler(new KeyPressHandler() {
 	      public void onKeyPress(KeyPressEvent event) {
 	        if (event.getCharCode() == KeyCodes.KEY_ENTER) {
-	        	getPreparedStatement();
-	        	 //start the process
-	            getProteaseInfo();
+	        	generateSearchRequest();
+	        
+	            
 	        	
 	        }
 	      }
@@ -103,20 +103,22 @@ public class ProteaseDb implements EntryPoint {
 	   * presses enter in the searchBox.
 	   */
 	
-	private Input getPreparedStatement(){
+	private void generateSearchRequest(){
 		String symbol = searchBox.getText().toUpperCase().trim();
-        searchBox.setFocus(true);    
+        searchBox.setFocus(true);
+        searchBox.setText("");
         System.out.println(symbol+"1");
-        Input input = new Input();
-        return input;
+        SearchRequest input = new SearchRequest();
+        input.setInput(symbol);
+        getProteaseInfo(input);
        
 			}
 	
-	private void getProteaseInfo() {
+	private void getProteaseInfo(SearchRequest input) {
 
 //        // draw loading
 //        loading.show();
-        
+        pProteaseTable.clear();
         AsyncCallback callback = new AsyncCallback() {
                 
                 // fail
@@ -141,7 +143,7 @@ public class ProteaseDb implements EntryPoint {
         };
                         
         // remote procedure call to the server to get the bible info
-        callProvider.getProteaseInfo(callback);
+        callProvider.getProteaseInfo(input, callback);
 }
 	 /**
      * draw bible info to screen after rpc callback
@@ -161,6 +163,8 @@ public class ProteaseDb implements EntryPoint {
             // set up the table the bible info will go into. 
             // I already init the grid var above so I can reference it other methods in this instance.
             grid = new Grid(rows+1, 4);
+            pProteaseTable.addStyleName("pProteaseTable");
+    		
             pProteaseTable.add(grid);
                     
             Label name = new Label("Name");
