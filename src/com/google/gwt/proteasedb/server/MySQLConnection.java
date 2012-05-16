@@ -1,5 +1,6 @@
 package com.google.gwt.proteasedb.server;
 
+import com.google.gwt.proteasedb.client.CleavagesiteData;
 import com.google.gwt.proteasedb.client.DBConnection;
 import com.google.gwt.proteasedb.client.ProteaseData;
 import com.google.gwt.proteasedb.client.ProteaseDb;
@@ -25,14 +26,13 @@ public class MySQLConnection extends RemoteServiceServlet implements DBConnectio
     }
 
 	@Override
-	public ProteaseData[] getProteaseInfo(SearchRequest input) throws Throwable {
+	public CleavagesiteData[] getCleavagesiteInfo(SearchRequest input) throws Throwable {
 		
 		// TODO Auto-generated method stub
 		DB_Protease db = new DB_Protease();
-		
 
-		ProteaseData[] proteaseData = db.getProteaseInfo(input);
-		return proteaseData;
+		CleavagesiteData[] cleavagesiteData = db.getCleavagesiteInfo(input);
+		return cleavagesiteData;
 	}
 
 }
