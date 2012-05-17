@@ -76,7 +76,7 @@ public class DB_Protease extends DB_Conn {
 
 			}
 			Connection connection2 = getConn();
-			String queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE S_UniprotId = ?";
+			String queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE S_UniprotId = ? ORDER BY P1, P_Symbol";
 			PreparedStatement ps2 = connection2.prepareStatement(queryCleavagesite);
 			
 

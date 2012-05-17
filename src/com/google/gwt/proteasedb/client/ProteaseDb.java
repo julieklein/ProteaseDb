@@ -35,8 +35,9 @@ public class ProteaseDb implements EntryPoint {
 	private TextBox searchBox = new TextBox();
 	private Button searchButton = new Button("Search");
 	private DecoratedStackPanel dStackPanel = new DecoratedStackPanel();
-	private Label lSubstrate = new Label("Substrate: ");
-	private Label lResult = new Label("Result: ");
+	private Label lSubstrate = new Label("Substrate");
+	private Label lSubstrateOutput = new Label();
+	private Label lResult = new Label("Result");
 	private Label lError = new Label();
 
 	// table for the bible info
@@ -50,6 +51,7 @@ public class ProteaseDb implements EntryPoint {
 		searchpanel.add(searchBox);
 
 		searchpanel.add(searchButton);
+		searchButton.addStyleDependentName("search");
 		searchpanel.addStyleName("pSearchpanel");
 		mainPanel.add(searchpanel);
 
@@ -181,7 +183,7 @@ public class ProteaseDb implements EntryPoint {
 		
 		if (resultbySubstrateData[0].getEntryValidity().contains(
 				"Sorry, there is no information about")) {
-			pResultPanel.add(lSubstrate);
+//			pResultPanel.add(lSubstrate);
 			lSubstrate.addStyleName("Label");
 			pResultPanel.add(lError);
 			lError.addStyleName("lError");
@@ -190,34 +192,22 @@ public class ProteaseDb implements EntryPoint {
 					.getEntryValidity()
 					.equalsIgnoreCase(
 							"Sorry, there is no cleavage site for this substrate in the database")) {
-				substrateGrid = new Grid(1, 3);
+//				
+				String substrateOutput = resultbySubstrateData[0].substrate.S_Symbol + ", " + resultbySubstrateData[0].substrate.S_NL_Name
+						+ " ("
+						+ resultbySubstrateData[0].substrate.S_Uniprotid
+						+ ")";
+				lSubstrateOutput = new Label(substrateOutput);
 
-				pResultPanel.add(lSubstrate);
-				pResultPanel.add(substrateGrid);
+//				pResultPanel.add(lSubstrate);
+				pResultPanel.add(lSubstrateOutput);
+				lSubstrateOutput.addStyleName("lSubstrateOutput");
 				pResultPanel.add(lResult);
 				lSubstrate.addStyleName("Label");
 				lResult.addStyleName("Label");
 				pResultPanel.add(dStackPanel);
 				dStackPanel.addStyleName("dStackPanel");
 
-				substrateGrid
-						.setWidget(
-								0,
-								1,
-								new HTML(
-										resultbySubstrateData[0].substrate.S_NL_Name
-												+ " ("
-												+ resultbySubstrateData[0].substrate.S_Uniprotid
-												+ ")"));
-				substrateGrid.setWidget(0, 0, new HTML(
-						resultbySubstrateData[0].substrate.S_Symbol + ","));
-
-				substrateGrid.getCellFormatter().setStyleName(0, 1,
-						"subtrateColumnBig");
-				substrateGrid.getCellFormatter().setStyleName(0, 0,
-						"subtrateColumnSmall");
-				substrateGrid.setStyleName("substrateTable");
-				substrateGrid.setCellPadding(6);
 				dStackPanel.add(lError);
 				lError.addStyleName("lError");
 
@@ -230,10 +220,16 @@ public class ProteaseDb implements EntryPoint {
 				// methods
 				// in this instance.
 
-				substrateGrid = new Grid(1, 3);
-
-				pResultPanel.add(lSubstrate);
-				pResultPanel.add(substrateGrid);
+			
+				String substrateOutput = resultbySubstrateData[0].substrate.S_Symbol + ", " + resultbySubstrateData[0].substrate.S_NL_Name
+						+ " ("
+						+ resultbySubstrateData[0].substrate.S_Uniprotid
+						+ ")";
+				lSubstrateOutput = new Label(substrateOutput);
+				
+//				pResultPanel.add(lSubstrate);
+				pResultPanel.add(lSubstrateOutput);
+				lSubstrateOutput.addStyleName("lSubstrateOutput");
 				pResultPanel.add(lResult);
 				lSubstrate.addStyleName("Label");
 				lResult.addStyleName("Label");
@@ -243,46 +239,8 @@ public class ProteaseDb implements EntryPoint {
 				grid = new Grid(rows + 1, 7);
 				dStackPanel.add(grid);
 
-				// // tool-tip hover
-				// name.setTitle("Protease Name");
-				// symbol.setTitle("Protease Symbol");
-				// uniprot.setTitle("Protease Uniprot ID");
-				// ecnumber.setTitle("Protease EC Number");
-
-				// go through the substrate database
-
-				// for (int i=0; i<1; i++){
-				substrateGrid
-						.setWidget(
-								0,
-								1,
-								new HTML(
-										resultbySubstrateData[0].substrate.S_NL_Name
-												+ " ("
-												+ resultbySubstrateData[0].substrate.S_Uniprotid
-												+ ")"));
-				substrateGrid.setWidget(0, 0, new HTML(
-						resultbySubstrateData[0].substrate.S_Symbol + ","));
-
-				// // row style
-				// boolean even = i % 2 == 0;
-				// String style = "";
-				// if (even == true) {
-				// style = "rs-even";
-				// } else {
-				// style = "rs-odd";
-				// }
-				substrateGrid.getCellFormatter().setStyleName(0, 1,
-						"subtrateColumnBig");
-				substrateGrid.getCellFormatter().setStyleName(0, 0,
-						"subtrateColumnSmall");
-
-				// }
-
-				substrateGrid.setStyleName("substrateTable");
-				substrateGrid.setCellPadding(6);
-
-				Label cssequence = new Label("CleavageSite sequence");
+				
+				Label cssequence = new Label("Cleavage Site");
 				Label p1 = new Label("P1");
 				Label p1prime = new Label("P1'");
 				Label name = new Label("Name");
@@ -294,28 +252,32 @@ public class ProteaseDb implements EntryPoint {
 				grid.setWidget(0, 0, cssequence);
 				grid.setWidget(0, 1, p1);
 				grid.setWidget(0, 2, p1prime);
-				grid.setWidget(0, 3, name);
-				grid.setWidget(0, 4, symbol);
+				grid.setWidget(0, 4, name);
+				grid.setWidget(0, 3, symbol);
 				grid.setWidget(0, 5, uniprot);
 				grid.setWidget(0, 6, ecnumber);
 
 				// go through the cleavagesite database
 				for (int i = 0; i < rows; i++) {
-					grid.setWidget(i + 1, 0, new HTML(
-							resultbySubstrateData[i].cleavageSite));
-
+					
+					String cleavageSite = resultbySubstrateData[i].cleavageSite;
+					String begin = cleavageSite.substring(0, 3);
+					String end = cleavageSite.substring(5, 8);
+					String middle1 = cleavageSite.substring(3, 4);
+					String middle2 = cleavageSite.substring(4, 5);
+					
+					grid.setWidget(i + 1, 0, new HTML("<p>"+ begin + "<strong><u>" + middle1 + "\u00A6" + middle2 + "</u></strong>" + end + "</p>"));
+					
 					String sp1 = Integer.toString(resultbySubstrateData[i].p1);
 					String sp1prime = Integer
 							.toString(resultbySubstrateData[i].p1prime);
-
 					grid.setWidget(i + 1, 1, new HTML(sp1));
 					grid.setWidget(i + 1, 2, new HTML(sp1prime));
 					grid.setWidget(i + 1, 3, new HTML(
-							resultbySubstrateData[i].protease.P_NL_Name));
-					grid.setWidget(i + 1, 4, new HTML(
 							resultbySubstrateData[i].protease.P_Symbol));
-					grid.setWidget(i + 1, 5, new HTML(
-							resultbySubstrateData[i].protease.P_Uniprotid));
+					grid.setWidget(i + 1, 4, new HTML(
+							resultbySubstrateData[i].protease.P_NL_Name));
+					grid.setWidget(i + 1, 5, new HTML("<a href=\"http://www.uniprot.org/uniprot/"+resultbySubstrateData[i].protease.P_Uniprotid +"\">"+resultbySubstrateData[i].protease.P_Uniprotid+"</a>"));
 					grid.setWidget(i + 1, 6, new HTML(
 							resultbySubstrateData[i].protease.P_Ecnumber));
 
@@ -328,34 +290,55 @@ public class ProteaseDb implements EntryPoint {
 						style = "rs-odd";
 					}
 					grid.getCellFormatter().setStyleName(i + 1, 0,
-							"proteaseNumericColumnSMALL");
+							"cleavagetsiteTableColor");
 					grid.getCellFormatter().setStyleName(i + 1, 1,
-							"proteaseNumericColumnSMALL");
+							"cleavagetsiteTableColor");
 					grid.getCellFormatter().setStyleName(i + 1, 2,
-							"proteaseNumericColumnSMALL");
-					grid.getCellFormatter().setStyleName(i + 1, 3,
-							"proteaseNumericColumnBIG");
+							"cleavagetsiteTableColor");
 					grid.getCellFormatter().setStyleName(i + 1, 4,
-							"proteaseNumericColumnSMALL");
+							"cleavagetsiteTableColor");				
+					grid.getCellFormatter().setStyleName(i + 1, 3,
+							"cleavagetsiteTableColor");
 					grid.getCellFormatter().setStyleName(i + 1, 5,
-							"proteaseNumericColumnSMALL");
+							"cleavagetsiteTableColor");
 					grid.getCellFormatter().setStyleName(i + 1, 6,
-							"proteaseNumericColumnSMALL");
+							"cleavagetsiteTableColor");
+					
+					grid.getCellFormatter().addStyleName(i + 1, 0,
+							"cleavagesiteTableMedium");
+					grid.getCellFormatter().addStyleName(i + 1, 1,
+							"cleavagesiteTableSmall");
+					grid.getCellFormatter().addStyleName(i + 1, 2,
+							"cleavagesiteTableSmall");
+					grid.getCellFormatter().addStyleName(i + 1, 4,
+							"cleavagesiteTableBig");				
+					grid.getCellFormatter().addStyleName(i + 1, 3,
+							"cleavagesiteTableMedium");
+					grid.getCellFormatter().addStyleName(i + 1, 5,
+							"cleavagesiteTableMedium");
+					grid.getCellFormatter().addStyleName(i + 1, 6,
+							"cleavagesiteTableMedium");
 				}
 
 				grid.setStyleName("cleavagesiteTable");
 				grid.setCellPadding(6);
 
-				grid.getRowFormatter().addStyleName(0, "proteaseTableHeader");
+				
 				grid.getCellFormatter().addStyleName(0, 0,
-						"proteaseNumericColumnBIG");
+						"cleavagesiteTableMedium");
 				grid.getCellFormatter().addStyleName(0, 1,
-						"proteaseNumericColumnSMALL");
+						"cleavagesiteTableSmall");
 				grid.getCellFormatter().addStyleName(0, 2,
-						"proteaseNumericColumnSMALL");
+						"cleavagesiteTableSmall");
+				grid.getCellFormatter().addStyleName(0, 4,
+						"cleavagesiteTableBig");				
 				grid.getCellFormatter().addStyleName(0, 3,
-						"proteaseNumericColumnSMALL");
-
+						"cleavagesiteTableMedium");
+				grid.getCellFormatter().addStyleName(0, 5,
+						"cleavagesiteTableMedium");
+				grid.getCellFormatter().addStyleName(0, 6,
+						"cleavagesiteTableMedium");
+				grid.getRowFormatter().addStyleName(0, "cleavagesiteTableHeader");
 				// // observer grid
 				// grid.addTableListener(this);
 			}
