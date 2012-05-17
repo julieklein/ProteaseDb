@@ -21,17 +21,23 @@ import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.DecoratorPanel;
 import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.client.ui.DecoratedTabBar;
+import com.google.gwt.user.client.ui.DecoratedStackPanel;
 
 public class ProteaseDb implements EntryPoint {
 	// rpc init Var
 	private DBConnectionAsync callProvider;
 	// main widget panel
 	private VerticalPanel mainPanel = new VerticalPanel();
-	private VerticalPanel pSubstratePanel = new VerticalPanel();
-	private VerticalPanel pCleavagesitePanel = new VerticalPanel();
+	private VerticalPanel pResultPanel = new VerticalPanel();
+	// private VerticalPanel pCleavagesitePanel = new VerticalPanel();
 	private HorizontalPanel searchpanel = new HorizontalPanel();
 	private TextBox searchBox = new TextBox();
 	private Button searchButton = new Button("Search");
+	private DecoratedStackPanel dStackPanel = new DecoratedStackPanel();
+	private Label lSubstrate = new Label("Substrate: ");
+	private Label lResult = new Label("Result: ");
+	private Label lError = new Label();
 
 	// table for the bible info
 	private Grid grid = null;
@@ -42,15 +48,17 @@ public class ProteaseDb implements EntryPoint {
 		// init the rpc
 
 		searchpanel.add(searchBox);
-		searchpanel.add(searchButton);
-		searchpanel.addStyleName("pProteaseTable");
-		mainPanel.add(searchpanel);
-		searchpanel.setWidth("192px");
-		pSubstratePanel.addStyleName("pProteaseTable");
 
-		mainPanel.add(pSubstratePanel);
-		pSubstratePanel.setSize("205px", "207px");
-		mainPanel.add(pCleavagesitePanel);
+		searchpanel.add(searchButton);
+		searchpanel.addStyleName("pSearchpanel");
+		mainPanel.add(searchpanel);
+
+		pResultPanel.addStyleName("pResultPanel");
+		mainPanel.add(pResultPanel);
+		pResultPanel.setWidth("700px");
+
+		// pCleavagesitePanel.addStyleName("pCleavagesitePanel");
+		// mainPanel.add(pCleavagesitePanel);
 
 		rpcInit();
 		//
@@ -63,16 +71,6 @@ public class ProteaseDb implements EntryPoint {
 		// Move cursor focus to the input box.
 		searchBox.setFocus(true);
 
-		// Listen for mouse events on the Add button.
-		searchButton.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				// keep search to setup prepared statement
-				generateSearchRequest();
-				// start the process
-
-			}
-		});
-
 		// Listen for keyboard events in the input box.
 		searchBox.addKeyPressHandler(new KeyPressHandler() {
 			public void onKeyPress(KeyPressEvent event) {
@@ -80,6 +78,16 @@ public class ProteaseDb implements EntryPoint {
 					generateSearchRequest();
 
 				}
+			}
+		});
+
+		// Listen for mouse events on the Add button.
+		searchButton.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				// keep search to setup prepared statement
+				generateSearchRequest();
+				// start the process
+
 			}
 		});
 
@@ -116,16 +124,17 @@ public class ProteaseDb implements EntryPoint {
 		System.out.println(symbol + "1");
 		SearchRequest input = new SearchRequest();
 		input.setInput(symbol);
-		getCleavagesiteInfo(input);
+		getResultbySubstrateInfo(input);
 
 	}
 
-	private void getCleavagesiteInfo(SearchRequest input) {
+	private void getResultbySubstrateInfo(SearchRequest input) {
 
 		// // draw loading
 		// loading.show();
-		pSubstratePanel.clear();
-		pCleavagesitePanel.clear();
+		pResultPanel.clear();
+		dStackPanel.clear();
+		// pCleavagesitePanel.clear();
 		AsyncCallback callback = new AsyncCallback() {
 
 			// fail
@@ -136,10 +145,10 @@ public class ProteaseDb implements EntryPoint {
 			// success
 			public void onSuccess(Object result) {
 
-				CleavagesiteData[] cleavagesiteData = (CleavagesiteData[]) result;
+				ResultbySubstrateData[] resultbySubstrate = (ResultbySubstrateData[]) result;
 
 				// draw bible info
-				drawCleavagesiteInfo(cleavagesiteData);
+				drawResultbySubstrateInfo(resultbySubstrate);
 
 				// // hide loading
 				// loading.hide();
@@ -148,7 +157,7 @@ public class ProteaseDb implements EntryPoint {
 		};
 
 		// remote procedure call to the server to get the bible info
-		callProvider.getCleavagesiteInfo(input, callback);
+		callProvider.getResultbySubstrateInfo(input, callback);
 	}
 
 	/**
@@ -156,138 +165,200 @@ public class ProteaseDb implements EntryPoint {
 	 * 
 	 * @param bibleData
 	 */
-	private void drawCleavagesiteInfo(CleavagesiteData[] cleavagesiteData) {
+	private void drawResultbySubstrateInfo(
+			ResultbySubstrateData[] resultbySubstrateData) {
 
 		// if null nothing to do, then exit
 		// this will prevent errors from showing up
-		if (cleavagesiteData == null) {
+		if (resultbySubstrateData == null) {
 			return;
 		}
 
-		int rows = cleavagesiteData.length;
-
-		// set up the table the bible info will go into.
-		// I already init the grid var above so I can reference it other methods
-		// in this instance.
-
-		substrateGrid = new Grid(rows + 1, 3);
-		pSubstratePanel.add(substrateGrid);
-		pCleavagesitePanel.addStyleName("pProteaseTable");
-
-		grid = new Grid(rows + 1, 7);
-		pCleavagesitePanel.add(grid);
-		pCleavagesitePanel.addStyleName("pProteaseTable");
+		String error = resultbySubstrateData[0].getEntryValidity();
+		System.out.println(error);
+		lError = new Label(error);
 		
-		Label cssequence = new Label("CleavageSite sequence");
-		Label p1 = new Label("P1");
-		Label p1prime = new Label("P1'");
-		Label name = new Label("Name");
-		Label symbol = new Label("Symbol");
-		Label uniprot = new Label("Uniprot ID");
-		Label ecnumber = new Label("EC Number");
-
-		// // tool-tip hover
-		// name.setTitle("Protease Name");
-		// symbol.setTitle("Protease Symbol");
-		// uniprot.setTitle("Protease Uniprot ID");
-		// ecnumber.setTitle("Protease EC Number");
-
-		// label row - Starts with 0 ordinal
-		grid.setWidget(0, 0, cssequence);
-		grid.setWidget(0, 1, p1);
-		grid.setWidget(0, 2, p1prime);
-		grid.setWidget(0, 3, name);
-		grid.setWidget(0, 4, symbol);
-		grid.setWidget(0, 5, uniprot);
-		grid.setWidget(0, 6, ecnumber);
 		
-		for (int i=0; i<1; i++){
-			substrateGrid.setWidget(0, 0, new HTML(
-					cleavagesiteData[i].substrate.S_NL_Name));
-			substrateGrid.setWidget(0, 1, new HTML(
-					cleavagesiteData[i].substrate.S_Symbol));
-			substrateGrid.setWidget(0, 2, new HTML(
-							cleavagesiteData[i].substrate.S_Uniprotid));
-			// row style
-						boolean even = i % 2 == 0;
-						String style = "";
-						if (even == true) {
-							style = "rs-even";
-						} else {
-							style = "rs-odd";
-						}
-						substrateGrid.getCellFormatter().setStyleName(0, 0,
-								"proteaseNumericColumnBIG");
-						substrateGrid.getCellFormatter().setStyleName(0, 1,
-								"proteaseNumericColumnSMALL");
-						substrateGrid.getCellFormatter().setStyleName(0, 2,
-								"proteaseNumericColumnSMALL");
-						
-					}
-		
+		if (resultbySubstrateData[0].getEntryValidity().contains(
+				"Sorry, there is no information about")) {
+			pResultPanel.add(lSubstrate);
+			lSubstrate.addStyleName("Label");
+			pResultPanel.add(lError);
+			lError.addStyleName("lError");
+		} else {
+			if (resultbySubstrateData[0]
+					.getEntryValidity()
+					.equalsIgnoreCase(
+							"Sorry, there is no cleavage site for this substrate in the database")) {
+				substrateGrid = new Grid(1, 3);
 
-		// go through the protease database
-		for (int i = 0; i < rows; i++) {
-			grid.setWidget(i + 1, 0, new HTML(
-					cleavagesiteData[i].cleavageSite));
-			
-			String sp1 = Integer.toString(cleavagesiteData[i].p1);
-			String sp1prime = Integer.toString(cleavagesiteData[i].p1prime);
-			
-			grid.setWidget(i + 1, 1, new HTML(
-					sp1));
-			grid.setWidget(i + 1, 2, new HTML(
-					sp1prime));
-			grid.setWidget(i + 1, 3, new HTML(
-					cleavagesiteData[i].protease.P_NL_Name));
-			grid.setWidget(i + 1, 4, new HTML(
-					cleavagesiteData[i].protease.P_Symbol));
-			grid.setWidget(i + 1, 5, new HTML(
-					cleavagesiteData[i].protease.P_Uniprotid));
-			grid.setWidget(i + 1, 6, new HTML(
-					cleavagesiteData[i].protease.P_Ecnumber));
+				pResultPanel.add(lSubstrate);
+				pResultPanel.add(substrateGrid);
+				pResultPanel.add(lResult);
+				lSubstrate.addStyleName("Label");
+				lResult.addStyleName("Label");
+				pResultPanel.add(dStackPanel);
+				dStackPanel.addStyleName("dStackPanel");
 
-			// row style
-			boolean even = i % 2 == 0;
-			String style = "";
-			if (even == true) {
-				style = "rs-even";
+				substrateGrid
+						.setWidget(
+								0,
+								1,
+								new HTML(
+										resultbySubstrateData[0].substrate.S_NL_Name
+												+ " ("
+												+ resultbySubstrateData[0].substrate.S_Uniprotid
+												+ ")"));
+				substrateGrid.setWidget(0, 0, new HTML(
+						resultbySubstrateData[0].substrate.S_Symbol + ","));
+
+				substrateGrid.getCellFormatter().setStyleName(0, 1,
+						"subtrateColumnBig");
+				substrateGrid.getCellFormatter().setStyleName(0, 0,
+						"subtrateColumnSmall");
+				substrateGrid.setStyleName("substrateTable");
+				substrateGrid.setCellPadding(6);
+				dStackPanel.add(lError);
+				lError.addStyleName("lError");
+
 			} else {
-				style = "rs-odd";
+
+				int rows = resultbySubstrateData.length;
+
+				// set up the table the bible info will go into.
+				// I already init the grid var above so I can reference it other
+				// methods
+				// in this instance.
+
+				substrateGrid = new Grid(1, 3);
+
+				pResultPanel.add(lSubstrate);
+				pResultPanel.add(substrateGrid);
+				pResultPanel.add(lResult);
+				lSubstrate.addStyleName("Label");
+				lResult.addStyleName("Label");
+				pResultPanel.add(dStackPanel);
+				dStackPanel.addStyleName("dStackPanel");
+
+				grid = new Grid(rows + 1, 7);
+				dStackPanel.add(grid);
+
+				// // tool-tip hover
+				// name.setTitle("Protease Name");
+				// symbol.setTitle("Protease Symbol");
+				// uniprot.setTitle("Protease Uniprot ID");
+				// ecnumber.setTitle("Protease EC Number");
+
+				// go through the substrate database
+
+				// for (int i=0; i<1; i++){
+				substrateGrid
+						.setWidget(
+								0,
+								1,
+								new HTML(
+										resultbySubstrateData[0].substrate.S_NL_Name
+												+ " ("
+												+ resultbySubstrateData[0].substrate.S_Uniprotid
+												+ ")"));
+				substrateGrid.setWidget(0, 0, new HTML(
+						resultbySubstrateData[0].substrate.S_Symbol + ","));
+
+				// // row style
+				// boolean even = i % 2 == 0;
+				// String style = "";
+				// if (even == true) {
+				// style = "rs-even";
+				// } else {
+				// style = "rs-odd";
+				// }
+				substrateGrid.getCellFormatter().setStyleName(0, 1,
+						"subtrateColumnBig");
+				substrateGrid.getCellFormatter().setStyleName(0, 0,
+						"subtrateColumnSmall");
+
+				// }
+
+				substrateGrid.setStyleName("substrateTable");
+				substrateGrid.setCellPadding(6);
+
+				Label cssequence = new Label("CleavageSite sequence");
+				Label p1 = new Label("P1");
+				Label p1prime = new Label("P1'");
+				Label name = new Label("Name");
+				Label symbol = new Label("Symbol");
+				Label uniprot = new Label("Uniprot ID");
+				Label ecnumber = new Label("EC Number");
+
+				// label row - Starts with 0 ordinal
+				grid.setWidget(0, 0, cssequence);
+				grid.setWidget(0, 1, p1);
+				grid.setWidget(0, 2, p1prime);
+				grid.setWidget(0, 3, name);
+				grid.setWidget(0, 4, symbol);
+				grid.setWidget(0, 5, uniprot);
+				grid.setWidget(0, 6, ecnumber);
+
+				// go through the cleavagesite database
+				for (int i = 0; i < rows; i++) {
+					grid.setWidget(i + 1, 0, new HTML(
+							resultbySubstrateData[i].cleavageSite));
+
+					String sp1 = Integer.toString(resultbySubstrateData[i].p1);
+					String sp1prime = Integer
+							.toString(resultbySubstrateData[i].p1prime);
+
+					grid.setWidget(i + 1, 1, new HTML(sp1));
+					grid.setWidget(i + 1, 2, new HTML(sp1prime));
+					grid.setWidget(i + 1, 3, new HTML(
+							resultbySubstrateData[i].protease.P_NL_Name));
+					grid.setWidget(i + 1, 4, new HTML(
+							resultbySubstrateData[i].protease.P_Symbol));
+					grid.setWidget(i + 1, 5, new HTML(
+							resultbySubstrateData[i].protease.P_Uniprotid));
+					grid.setWidget(i + 1, 6, new HTML(
+							resultbySubstrateData[i].protease.P_Ecnumber));
+
+					// row style
+					boolean even = i % 2 == 0;
+					String style = "";
+					if (even == true) {
+						style = "rs-even";
+					} else {
+						style = "rs-odd";
+					}
+					grid.getCellFormatter().setStyleName(i + 1, 0,
+							"proteaseNumericColumnSMALL");
+					grid.getCellFormatter().setStyleName(i + 1, 1,
+							"proteaseNumericColumnSMALL");
+					grid.getCellFormatter().setStyleName(i + 1, 2,
+							"proteaseNumericColumnSMALL");
+					grid.getCellFormatter().setStyleName(i + 1, 3,
+							"proteaseNumericColumnBIG");
+					grid.getCellFormatter().setStyleName(i + 1, 4,
+							"proteaseNumericColumnSMALL");
+					grid.getCellFormatter().setStyleName(i + 1, 5,
+							"proteaseNumericColumnSMALL");
+					grid.getCellFormatter().setStyleName(i + 1, 6,
+							"proteaseNumericColumnSMALL");
+				}
+
+				grid.setStyleName("cleavagesiteTable");
+				grid.setCellPadding(6);
+
+				grid.getRowFormatter().addStyleName(0, "proteaseTableHeader");
+				grid.getCellFormatter().addStyleName(0, 0,
+						"proteaseNumericColumnBIG");
+				grid.getCellFormatter().addStyleName(0, 1,
+						"proteaseNumericColumnSMALL");
+				grid.getCellFormatter().addStyleName(0, 2,
+						"proteaseNumericColumnSMALL");
+				grid.getCellFormatter().addStyleName(0, 3,
+						"proteaseNumericColumnSMALL");
+
+				// // observer grid
+				// grid.addTableListener(this);
 			}
-			grid.getCellFormatter().setStyleName(i + 1, 0,
-					"proteaseNumericColumnSMALL");
-			grid.getCellFormatter().setStyleName(i + 1, 1,
-					"proteaseNumericColumnSMALL");
-			grid.getCellFormatter().setStyleName(i + 1, 2,
-					"proteaseNumericColumnSMALL");
-			grid.getCellFormatter().setStyleName(i + 1, 3,
-					"proteaseNumericColumnBIG");
-			grid.getCellFormatter().setStyleName(i + 1, 4,
-					"proteaseNumericColumnSMALL");
-			grid.getCellFormatter().setStyleName(i + 1, 5,
-					"proteaseNumericColumnSMALL");
-			grid.getCellFormatter().setStyleName(i + 1, 6,
-					"proteaseNumericColumnSMALL");
 		}
-
-		grid.setStyleName("proteaseTable");
-		grid.getRowFormatter().addStyleName(0, "proteaseTableHeader");
-		grid.getCellFormatter().addStyleName(0, 0, "proteaseNumericColumnBIG");
-		grid.getCellFormatter()
-				.addStyleName(0, 1, "proteaseNumericColumnSMALL");
-		grid.getCellFormatter()
-				.addStyleName(0, 2, "proteaseNumericColumnSMALL");
-		grid.getCellFormatter()
-				.addStyleName(0, 3, "proteaseNumericColumnSMALL");
-
-		grid.setCellPadding(6);
-		
-		substrateGrid.setStyleName("proteaseTable");
-		substrateGrid.setCellPadding(6);
-
-		// // observer grid
-		// grid.addTableListener(this);
-
 	}
 }

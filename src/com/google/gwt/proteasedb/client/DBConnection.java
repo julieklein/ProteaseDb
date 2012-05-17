@@ -9,6 +9,6 @@ public interface DBConnection extends RemoteService {
      * @return
 	 * @throws Throwable 
      */
-    public CleavagesiteData[] getCleavagesiteInfo(SearchRequest inputObject) throws Throwable;
+    public ResultbySubstrateData[] getResultbySubstrateInfo(SearchRequest inputObject) throws Throwable;
 
 }
