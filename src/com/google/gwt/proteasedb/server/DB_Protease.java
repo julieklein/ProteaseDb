@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import com.google.gwt.proteasedb.client.PeptideData;
 import com.google.gwt.proteasedb.client.ResultbySubstrateData;
@@ -11,6 +12,9 @@ import com.google.gwt.proteasedb.client.SubstrateData;
 import com.google.gwt.proteasedb.client.ProteaseData;
 import com.google.gwt.proteasedb.client.SearchRequest;
 import com.sun.source.tree.NewClassTree;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
 
 /**
  * I extend the DB_Conn abstract class, then I don't have to rewrite code
@@ -34,10 +38,11 @@ public class DB_Protease extends DB_Conn {
 		String querySubstrate = "SELECT * FROM SUBSTRATE WHERE S_Symbol = ?";
 		
 		
-		ResultbySubstrateData[] resultbySubstrateData = null;
+		ResultbySubstrateData[] firstcapacityarray = null;
+		ResultbySubstrateData[] intermediatecapacityarray = null;
 		
 		int k = 0;
-		ResultbySubstrateData[] newcapResultbySubstrateData = new ResultbySubstrateData[k];
+		ResultbySubstrateData[] lastcapacityarray = new ResultbySubstrateData[k];
 		
 		
 			
@@ -58,13 +63,13 @@ public class DB_Protease extends DB_Conn {
 			int rsSize = getResultSetSize(result); 
 			
 			if(rsSize==0){
-				resultbySubstrateData = new ResultbySubstrateData[1];
-				resultbySubstrateData[0] = new ResultbySubstrateData();			
-				resultbySubstrateData[0].setSubstrate(substrate);
+				firstcapacityarray = new ResultbySubstrateData[1];
+				firstcapacityarray[0] = new ResultbySubstrateData();			
+				firstcapacityarray[0].setSubstrate(substrate);
 				ProteaseData protease = new ProteaseData();
-				resultbySubstrateData[0].setProtease(protease);
-				resultbySubstrateData[0].setEntryValidity("Sorry, there is no information about "+request+" in the database");	
-				System.out.println(resultbySubstrateData[0].getEntryValidity());
+				firstcapacityarray[0].setProtease(protease);
+				firstcapacityarray[0].setEntryValidity("Sorry, there is no information about "+request+" in the database");	
+				System.out.println(firstcapacityarray[0].getEntryValidity());
 				
 			}else{
 			while (result.next()) {
@@ -88,10 +93,10 @@ public class DB_Protease extends DB_Conn {
 
 				// init object into the size we need, like a recordset
 				int rsSize2 = getResultSetSize(result2); // size the array
-				int sizearray = rsSize2 + k;
-				resultbySubstrateData = new ResultbySubstrateData[sizearray];
-				System.arraycopy(newcapResultbySubstrateData, 0, resultbySubstrateData, 0, k);
-				System.out.println(sizearray);
+				int sizefirstarray = rsSize2 + k;
+				firstcapacityarray = new ResultbySubstrateData[sizefirstarray];
+				System.arraycopy(lastcapacityarray, 0, firstcapacityarray, 0, k);
+				System.out.println(sizefirstarray);
 				
 				if(rsSize2>0){
 
@@ -99,15 +104,15 @@ public class DB_Protease extends DB_Conn {
 
 				while (result2.next()) {
 					ProteaseData protease = new ProteaseData();
-					resultbySubstrateData[i] = new ResultbySubstrateData();
-					resultbySubstrateData[i].setSubstrate(substrate);
-					resultbySubstrateData[i].cleavageSite = result2
+					firstcapacityarray[i] = new ResultbySubstrateData();
+					firstcapacityarray[i].setSubstrate(substrate);
+					firstcapacityarray[i].cleavageSite = result2
 							.getString("CleavageSite_Sequence");
-					resultbySubstrateData[i].p1 = result2.getInt("P1");
-					resultbySubstrateData[i].p1prime = result2.getInt("P1prime");
-					resultbySubstrateData[i].setEntryValidity("xxxxx");
-					resultbySubstrateData[i].setNature("cleavagesite");
-					System.out.print(resultbySubstrateData[i].getEntryValidity());
+					firstcapacityarray[i].p1 = result2.getInt("P1");
+					firstcapacityarray[i].p1prime = result2.getInt("P1prime");
+					firstcapacityarray[i].setEntryValidity("xxxxx");
+					firstcapacityarray[i].setNature("cleavagesite");
+					System.out.print(firstcapacityarray[i].getEntryValidity());
 					String puni = result2.getString("P_UniprotId");
 					protease.P_Uniprotid = puni;
 					
@@ -125,7 +130,7 @@ public class DB_Protease extends DB_Conn {
 							protease.P_NL_Name = result3.getString("P_NL_Name");
 							protease.P_Symbol = result3.getString("P_Symbol");
 							protease.P_Ecnumber = result3.getString("P_EC_Number");
-							resultbySubstrateData[i].setProtease(protease);
+							firstcapacityarray[i].setProtease(protease);
 						}
 						result3.close();
 						ps3.clearParameters();
@@ -143,11 +148,13 @@ public class DB_Protease extends DB_Conn {
 				}
 				// clean up
 					//i = i+rsSize2;
-					System.out.println(sizearray +"quiquiquisontlessnorkis");
+					System.out.println(sizefirstarray +"quiquiquisontlessnorkis");
 							result2.close();
 							ps2.clearParameters();
 							ps2.close();
 							connection2.close();
+							
+							
 							
 							Connection connection5 = getConn();
 							String queryPeptide = "SELECT * FROM PEPTIDE WHERE S_UniprotId = ? ORDER BY Pd_Start, Pd_Regulation";
@@ -165,34 +172,50 @@ public class DB_Protease extends DB_Conn {
 								//resultbySubstrateData = new ResultbySubstrateData[rsSize2];
 								System.out.println(rsSize5+"quiquiquismaisqui");
 								
-								k = sizearray + rsSize5;
+								if(rsSize5>0) {
+								k = sizefirstarray + rsSize5;
 								System.out.println(k+"pas les schtroumfs");
-								newcapResultbySubstrateData = new ResultbySubstrateData[k];
+								}else {
+								k = sizefirstarray + 1;
+								System.out.println(k+"pas les schtroumfs");
+								}
+								lastcapacityarray = new ResultbySubstrateData[k];
 								
-								System.arraycopy(resultbySubstrateData, 0, newcapResultbySubstrateData, 0, resultbySubstrateData.length);
+								System.arraycopy(firstcapacityarray, 0, lastcapacityarray, 0, firstcapacityarray.length);
 								
-								i=resultbySubstrateData.length;
+								i=firstcapacityarray.length;
+								
+								if(rsSize5>0){
 
 								while (result5.next() && i<k) {
-									newcapResultbySubstrateData[i] = new ResultbySubstrateData();
+									lastcapacityarray[i] = new ResultbySubstrateData();
 									SubstrateData substrate2 = new SubstrateData();
 									substrate2.S_Symbol = result5.getString("S_Symbol");
 									System.out.println(result5.getString("S_Symbol")+"ni bob");
-									newcapResultbySubstrateData[i].setSubstrate(substrate2);
+									lastcapacityarray[i].setSubstrate(substrate2);
 									PeptideData peptide = new PeptideData();
 									ProteaseData protease= new ProteaseData();
-									newcapResultbySubstrateData[i].setProtease(protease);	
+									lastcapacityarray[i].setProtease(protease);	
 									String disease = result5.getString("Pd_Disease");
 									peptide.disease = disease;
 									System.out.println(disease);
 									peptide.regulation = result5.getString("Pd_Regulation");
 									peptide.start = result5.getInt("Pd_Start");
 									peptide.end = result5.getInt("Pd_End");
-									newcapResultbySubstrateData[i].setPeptide(peptide);
-									newcapResultbySubstrateData[i].setEntryValidity("xxxxx");
-									newcapResultbySubstrateData[i].setNature("peptide");
+									lastcapacityarray[i].setPeptide(peptide);
+									lastcapacityarray[i].setEntryValidity("xxxxx");
+									lastcapacityarray[i].setNature("peptide");
 									i++;
 		
+								}
+								}else {
+									
+									lastcapacityarray[i] = new ResultbySubstrateData();
+									lastcapacityarray[i].setNature("peptide");
+									lastcapacityarray[i].setEntryValidity("Sorry, there is no peptide for this substrate in the database");
+									System.out.print("ttttt");
+									
+
 								}
 							
 								result5.close();
@@ -221,18 +244,19 @@ public class DB_Protease extends DB_Conn {
 						// Statement select = connection.createStatement();
 						ResultSet result4= ps4.executeQuery();
 						int rsSize4 = getResultSetSize(result4); // size the array
-						resultbySubstrateData = new ResultbySubstrateData[rsSize4];
+						firstcapacityarray = new ResultbySubstrateData[rsSize4];
 						System.out.println(rsSize4);
 
 					
 						while (result4.next()) {
-							resultbySubstrateData[0] = new ResultbySubstrateData();
+							firstcapacityarray[0] = new ResultbySubstrateData();
 							substrate2.S_Uniprotid = result4.getString("S_UniprotId");							
 							substrate2.S_NL_Name = result4.getString("S_NL_Name");
 							substrate2.S_Symbol = result4.getString("S_Symbol");
-							resultbySubstrateData[0].setSubstrate(substrate2);							
-							resultbySubstrateData[0].setProtease(protease2);
-							resultbySubstrateData[0].setEntryValidity("Sorry, there is no cleavage site for this substrate in the database");
+							firstcapacityarray[0].setSubstrate(substrate2);							
+							firstcapacityarray[0].setProtease(protease2);
+							firstcapacityarray[0].setNature("cleavagesite");
+							firstcapacityarray[0].setEntryValidity("Sorry, there is no cleavage site for this substrate in the database");
 							System.out.print("wwwww");
 						}
 						
@@ -278,7 +302,7 @@ public class DB_Protease extends DB_Conn {
 		// return the array
 		
 		
-		return newcapResultbySubstrateData;
+		return lastcapacityarray;
 	
 		
 	}

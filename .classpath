@@ -6,5 +6,6 @@
 	<classpathentry kind="lib" path="/Users/julieklein/mysql-connector-java-5.1.20/mysql-connector-java-5.1.20-bin.jar"/>
 	<classpathentry kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER"/>
 	<classpathentry kind="lib" path="/Users/julieklein/gwt-2.4.0/gwt-servlet.jar"/>
+	<classpathentry kind="lib" path="/Users/julieklein/gwt-2.4.0/gwt-dev.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>
