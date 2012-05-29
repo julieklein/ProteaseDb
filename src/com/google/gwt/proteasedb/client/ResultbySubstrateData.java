@@ -36,6 +36,8 @@ public class ResultbySubstrateData implements IsSerializable{
 
 	public PeptideData peptide;
 
+
+
 	public SubstrateData substrate;
 	public String cleavageSite;
 	public int p1;
