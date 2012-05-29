@@ -3,7 +3,7 @@ package com.google.gwt.proteasedb.server;
 import com.google.gwt.proteasedb.client.ResultbySubstrateData;
 import com.google.gwt.proteasedb.client.DBConnection;
 import com.google.gwt.proteasedb.client.ProteaseData;
-import com.google.gwt.proteasedb.client.ProteaseDb;
+import com.google.gwt.proteasedb.client.ProteasiXEntryPoint;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.gwt.proteasedb.client.SearchRequest;
 /**
