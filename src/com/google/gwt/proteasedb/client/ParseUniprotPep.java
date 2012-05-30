@@ -1,4 +1,5 @@
-package com.google.gwt.proteasedb.server;
+package com.google.gwt.proteasedb.client;
+import com.google.gwt.user.client.rpc.IsSerializable;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -16,7 +17,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-public class ParseUniprotPep {
+public class ParseUniprotPep implements IsSerializable{
 	   public Document getXML(String url) {
 
 	        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

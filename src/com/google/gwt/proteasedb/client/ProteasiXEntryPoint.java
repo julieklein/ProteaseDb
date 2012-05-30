@@ -1,5 +1,6 @@
 package com.google.gwt.proteasedb.client;
 
+import com.google.gwt.cell.client.NumberCell;
 import com.google.gwt.cell.client.SafeHtmlCell;
 import com.google.gwt.core.client.EntryPoint;
 import java.util.ArrayList;
@@ -9,6 +10,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import java_cup.parse_action;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
@@ -21,6 +24,7 @@ import com.google.gwt.event.logical.shared.CloseEvent;
 import com.google.gwt.event.logical.shared.CloseHandler;
 import com.google.gwt.event.logical.shared.OpenEvent;
 import com.google.gwt.event.logical.shared.OpenHandler;
+import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -321,7 +325,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 					if (resultbySubstrateData2.getNature().equals("cleavagesite")) {
 						numbercs++;
 					}
-					if (resultbySubstrateData2.getNature().equals("peptide")) {
+					else if (resultbySubstrateData2.getNature().equals("peptide")) {
 						numberpep++;
 					}
 					System.out.println(resultbySubstrateData2);
@@ -409,33 +413,6 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				}
 
 				
-//				List<ResultbySubstrateData> resultcslist = Arrays.asList(resultcs);
-//				List<ResultbySubstrateData> resultpeplist = Arrays.asList(resultpep);
-//
-//				
-//				System.out.println(resultpep.length + "resultpep");
-//				System.out.println(resultcs.length + "resultcs");
-//
-//				
-//				lSubstrate.addStyleName("Label");
-//				
-//				pResultPanel.add(dpProtease);
-//				pResultPanel
-//				.add(new HTML(
-//						"<div><hr style=\"height:8px;;border-width:0;color:#9FB9A8;background-color:#9FB9A8;\"></div>"));
-//				pResultPanel.add(dpPeptide);
-//				dpProtease.addStyleDependentName("mydp");
-//				dpPeptide.addStyleDependentName("mydp");
-//
-//				pResultPanel.addStyleName("Label");
-//
-//				createCleavageSiteTable(resultcs, resultcslist);
-//			   
-//				createPeptideTable(resultpep, resultpeplist);
-//				
-				
-				
-				
 				
 				
 			
@@ -462,7 +439,13 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		TextColumn<ResultbySubstrateData> startCol = new TextColumn<ResultbySubstrateData>() {
 			 @Override
 		      public String getValue(ResultbySubstrateData resultbySubstrateData) {
-		        return Integer.toString(resultbySubstrateData.peptide.start);
+				String start = null;
+				if (resultbySubstrateData.peptide.start == 0) {
+					start = "?";
+				}else {
+					start = Integer.toString(resultbySubstrateData.peptide.start);
+				}
+		        return start;
 		      }
 
 		}; 
@@ -470,7 +453,21 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		TextColumn<ResultbySubstrateData> endCol = new TextColumn<ResultbySubstrateData>() {
 			 @Override
 		      public String getValue(ResultbySubstrateData resultbySubstrateData) {
-		        return Integer.toString(resultbySubstrateData.peptide.end);
+				 String end = null;
+					if (resultbySubstrateData.peptide.end == 0) {
+						end = "?";
+					}else {
+						end = Integer.toString(resultbySubstrateData.peptide.end);
+					}
+			        return end;
+			      }
+
+		}; 
+		
+		TextColumn<ResultbySubstrateData> structureCol = new TextColumn<ResultbySubstrateData>() {
+			 @Override
+		      public String getValue(ResultbySubstrateData resultbySubstrateData) {
+		        return resultbySubstrateData.peptide.structure;
 		      }
 
 		}; 
@@ -492,6 +489,8 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		        regulation ="<div style=\"background:#008F29;border:1px solid black;width:30px;height:30px;margin-left:26px\"></div>" + resultbySubstrateData.peptide.regulation ;
 			 }else if (resultbySubstrateData.peptide.regulation.equals("Up")) {
 				 regulation = "<div style=\"background:red;border:1px solid black;width:30px;height:30px;margin-left:26px\"></div>" + resultbySubstrateData.peptide.regulation ;
+			 }else if (resultbySubstrateData.peptide.regulation.equals("")) {
+				 regulation = "-" ;
 			 }
 			 return new SafeHtmlBuilder().appendHtmlConstant(regulation).toSafeHtml();
 		      }
@@ -507,19 +506,23 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		endCol.setSortable(true);
 		diseaseCol.setSortable(true);
 		regulationCol.setSortable(true);
+		structureCol.setSortable(true);
 		
 		// Add the columns.
 		peptideTable.addColumn(substrateCol,"Substrate\u25B2\u25BC" );
 		peptideTable.addColumn(startCol,"Start\u25B2\u25BC" );
 		peptideTable.addColumn(endCol, "End\u25B2\u25BC");
+		peptideTable.addColumn(structureCol, "Structure/Function\u25B2\u25BC");
 		peptideTable.addColumn(diseaseCol, "Disease\u25B2\u25BC");
 		peptideTable.addColumn(regulationCol, "Regulation\u25B2\u25BC");
 
 		peptideTable.setColumnWidth(substrateCol, 5, Unit.EM);
 		peptideTable.setColumnWidth(startCol, 2, Unit.EM);
 		peptideTable.setColumnWidth(endCol, 2, Unit.EM);
+		peptideTable.setColumnWidth(structureCol, 20, Unit.EM);
 		peptideTable.setColumnWidth(diseaseCol, 20, Unit.EM);
 		peptideTable.setColumnWidth(regulationCol, 2, Unit.EM);
+		
 
 		
 		dpPeptide.add(peptideTable);
@@ -606,6 +609,28 @@ public class ProteasiXEntryPoint implements EntryPoint {
  // We know that the data is sorted alphabetically by default.
 		peptideTable.getColumnSortList().push(endCol);
 		
+		 // Add a ColumnSortEvent.ListHandler to connect sorting to the
+		// java.util.List.
+		ListHandler<ResultbySubstrateData> structureColSortHandler = new ListHandler<ResultbySubstrateData>(
+				peplist);
+		structureColSortHandler.setComparator(structureCol,
+		    new Comparator<ResultbySubstrateData>() {
+		      public int compare(ResultbySubstrateData o1, ResultbySubstrateData o2) {
+		        if (o1 == o2) {
+		          return 0;
+		        }
+
+		        // Compare the symbol columns.
+		        if (o1 != null) {
+		          return (o2 != null) ? o1.peptide.structure.compareTo(o2.peptide.structure) : 1;
+		        }
+		        return -1;
+		      }
+		    });
+		peptideTable.addColumnSortHandler(structureColSortHandler);
+		
+ // We know that the data is sorted alphabetically by default.
+		peptideTable.getColumnSortList().push(structureCol);
 		
  // Add a ColumnSortEvent.ListHandler to connect sorting to the
 		// java.util.List.
