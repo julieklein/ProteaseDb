@@ -135,15 +135,7 @@ color:#4A4A4A;
 
 /* stock list header row */
 
-.cleavagesiteTableHeader{
-  
-  color: #4A4A4A;
-  text-align: center;
-  font-style: bold;
-  
-  border-bottom-color: #737373;
-  
-}
+
 .gwt-DisclosurePanel-mydp {
 	margin-top:10px !important;
 	
@@ -176,21 +168,7 @@ color:#4A4A4A;
 	font-style: bold;
 }
 
-.cleavagesiteTable {
- /* border: 1px solid gold;*/
-  padding: 2px;
-  margin-bottom:6px;
-}
-
-.cleavagetsiteTableColor{
-	color:#4A4A4A;
-}
-
-.cleavagesiteTableBig {
-  text-align: center;
-  width:17em;
-  
-}
+.
 .gwt-TabPanel {
     margin-top: 4px;
     margin-left: 10px !important;
@@ -219,15 +197,14 @@ color:#4A4A4A;
     -moz-border-radius: 10px 10px 0px 0px;
     -webkit-border-radius: 10px 10px 0px 0px;
     padding: 5px;
-    background: -moz-linear-gradient(center bottom, #999999 0%,#ffffff 100%) ;
-    background: -webkit-gradient(linear, left bottom, left top, color-stop(0, #999999),color-stop(1, #ffffff)) ;
+    background-color: #ebebeb !important ;
+    background: -webkit-gradient(linear, left bottom, left top, color-stop(0, #999999),color-stop(1, #ffffff));
 }
 
 .gwt-TabBarItem-selected {
     padding: 4px;
     font-weight: bold;
     cursor: default;
-
     background-color: #b3b3b3 !important;
     margin-right: 2px;
 }

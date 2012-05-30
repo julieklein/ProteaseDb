@@ -9,6 +9,7 @@
 		init inside java class -->
 	<!-- Tomcat will listen for this from the server and waits for rpc request 
 		in this context -->
+		
 	<servlet class="com.google.gwt.proteasedb.server.MySQLConnection"
 		path="/MySQLConnection" />
 

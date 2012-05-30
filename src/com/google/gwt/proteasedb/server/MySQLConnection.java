@@ -26,7 +26,7 @@ public class MySQLConnection extends RemoteServiceServlet implements DBConnectio
     }
 
 	@Override
-	public ResultbySubstrateData[] getResultbySubstrateInfo(SearchRequest[] searchRequest) throws Throwable {
+	public ResultbySubstrateData[] getResultInfo(SearchRequest[] searchRequest) throws Throwable {
 		
 		// TODO Auto-generated method stub
 		DB_Protease db = new DB_Protease();

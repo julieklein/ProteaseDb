@@ -40,6 +40,7 @@ public class DB_Protease extends DB_Conn {
 			SearchRequest[] searchRequest) throws Throwable {
 
 		String querySubstrate = "SELECT * FROM SUBSTRATE WHERE S_Symbol = ?";
+		String queryPeptide = "SELECT * FROM PEPTIDE WHERE Pd_Sequence = ?";
 
 		ResultbySubstrateData[] firstcapacityarray = null;
 		ResultbySubstrateData[] intermediatecapacityarray = null;
@@ -48,11 +49,12 @@ public class DB_Protease extends DB_Conn {
 		ResultbySubstrateData[] lastcapacityarray = new ResultbySubstrateData[k];
 
 		for (SearchRequest searchReq : searchRequest) {
-			String request = searchReq.getInput();
+			String proteinrequest = searchReq.getProteininputsymbol();
+			String peptiderequest = searchReq.getPeptideinputsequence();
 
+			if (searchReq.getRequestnature().equalsIgnoreCase("proteinRequest")) {
 			Connection connection = getConn();
 			PreparedStatement ps = connection.prepareStatement(querySubstrate);
-			// ResultbySubstrateData[] resultbySubstrateDataintermediate = null;
 			SubstrateData substrate = new SubstrateData();
 
 			int kFirst = 0;
@@ -64,22 +66,21 @@ public class DB_Protease extends DB_Conn {
 			String substratename = null;
 			
 			try {
-				ps.setString(1, request);
-				// Statement select = connection.createStatement();
+				ps.setString(1, proteinrequest);
 				ResultSet result = ps.executeQuery();
 				int rsSize = getResultSetSize(result);
 
 				if (rsSize == 0) {
-					firstcapacityarray = new ResultbySubstrateData[1];
-					firstcapacityarray[0] = new ResultbySubstrateData();
-					firstcapacityarray[0].setSubstrate(substrate);
+					firstcapacityarray = new ResultbySubstrateData[k+1];
+					firstcapacityarray[k] = new ResultbySubstrateData();
+					firstcapacityarray[k].setSubstrate(substrate);
 					ProteaseData protease = new ProteaseData();
-					firstcapacityarray[0].setProtease(protease);
-					firstcapacityarray[0]
+					firstcapacityarray[k].setProtease(protease);
+					firstcapacityarray[k]
 							.setEntryValidity("Sorry, there is no information about "
-									+ request + " in the database");
+									+ proteinrequest + " in the database");
 					System.out
-							.println(firstcapacityarray[0].getEntryValidity());
+							.println(firstcapacityarray[k].getEntryValidity());
 
 				} else {
 					while (result.next()) {
@@ -177,9 +178,9 @@ public class DB_Protease extends DB_Conn {
 							connection2.close();
 
 							Connection connection5 = getConn();
-							String queryPeptide = "SELECT * FROM PEPTIDE WHERE S_UniprotId = ? ORDER BY Pd_Start, Pd_Regulation";
+							String queryAllPeptide = "SELECT * FROM PEPTIDE WHERE S_UniprotId = ? ORDER BY Pd_Start, Pd_Regulation";
 							PreparedStatement ps5 = connection5
-									.prepareStatement(queryPeptide);
+									.prepareStatement(queryAllPeptide);
 
 							try {
 								ps5.setString(1, substrateuni);
@@ -203,7 +204,6 @@ public class DB_Protease extends DB_Conn {
 								} 
 								else {
 									kInter = kFirst;
-//									kInter = kFirst + 1;
 									System.out.println(kInter
 											+ "pas les schtroumfs");
 								}
@@ -228,9 +228,6 @@ public class DB_Protease extends DB_Conn {
 										intermediatecapacityarray[i]
 												.setSubstrate(substrate2);
 										PeptideData peptide = new PeptideData();
-										ProteaseData protease = new ProteaseData();
-										intermediatecapacityarray[i]
-												.setProtease(protease);
 										String disease = result5
 												.getString("Pd_Disease");
 										peptide.disease = disease;
@@ -493,7 +490,7 @@ public class DB_Protease extends DB_Conn {
 							ProteaseData protease2 = new ProteaseData();
 
 							try {
-								ps4.setString(1, request);
+								ps4.setString(1, proteinrequest);
 								System.out.println(ps4);
 								// Statement select =
 								// connection.createStatement();
@@ -557,11 +554,102 @@ public class DB_Protease extends DB_Conn {
 				ignore.printStackTrace();
 
 			}
+			
 			k = kLast;
+			
+		}else if (searchReq.getRequestnature().equalsIgnoreCase("peptideRequest")) {
+			Connection connection = getConn();
+			PreparedStatement ps = connection.prepareStatement(queryPeptide);
+			SubstrateData substrate = new SubstrateData();
+			String searchnumber = searchReq.getPeptideinputnumber();
+			System.out.println(searchnumber);
+			
+			int kFirst = 0;
+			int kInter = 0;
+			int kLast = 0;
+
+			String substratesymbol = null;
+			String substrateuni = null;
+			String substratename = null;
+			
+			try {
+				ps.setString(1, peptiderequest);
+				System.out.println(ps);
+				ResultSet result = ps.executeQuery();
+				int rsSize = getResultSetSize(result);
+				
+				// size the
+				// array
+				if (rsSize == 0) {
+				kFirst = 1 + k;
+				}else {
+				kFirst = rsSize + k;
+				}
+				
+				firstcapacityarray = new ResultbySubstrateData[kFirst];
+				System.arraycopy(lastcapacityarray, 0,
+						firstcapacityarray, 0, k);
+				System.out.println(kFirst + "FirstCapArray");
+
+				if (rsSize == 0) {
+					firstcapacityarray[k] = new ResultbySubstrateData();
+					PeptideData peptide = new PeptideData();
+					peptide.searchnumber = searchnumber;
+					peptide.sequence = peptiderequest;
+					firstcapacityarray[k].setPeptide(peptide);
+					firstcapacityarray[k].setEntryValidity("doesn't exist in the database");
+				} else {
+					
+					int i = k;
+					while (result.next()) {
+						substrateuni = result.getString("S_UniprotId");
+						substratesymbol = result.getString("S_Symbol");
+						substrate.S_Uniprotid = substrateuni;
+						substrate.S_Symbol = substratesymbol;
+						firstcapacityarray[i] = new ResultbySubstrateData();
+						firstcapacityarray[i].setSubstrate(substrate);
+						PeptideData peptide = new PeptideData();
+						peptide.searchnumber = searchnumber;
+						peptide.sequence = peptiderequest;
+						String disease = result
+								.getString("Pd_Disease");
+						peptide.disease = disease;
+						System.out.println(disease);
+						peptide.regulation = result
+								.getString("Pd_Regulation");
+						peptide.structure = "";
+						peptide.start = result
+								.getInt("Pd_Start");
+						peptide.end = result.getInt("Pd_End");
+						firstcapacityarray[i]
+								.setPeptide(peptide);
+						firstcapacityarray[i]
+								.setEntryValidity("xxxxx");
+						i++;
+					}
+				}
+			//create lastcapacity array
+			kLast = firstcapacityarray.length;
+			lastcapacityarray = new ResultbySubstrateData[kLast];
+			System.arraycopy(firstcapacityarray, 0,
+					lastcapacityarray, 0, kFirst);
+			k = kLast;
+				
+				// clean up
+			result.close();
+			ps.clearParameters();
+			ps.close();
+			connection.close();
+
+		} catch (Throwable ignore) {
+			System.err.println("Mysql Statement Error: "
+					+ queryPeptide);
+			ignore.printStackTrace();
+
 		}
-
+		}
+		}
 		// return the array
-
 		return lastcapacityarray;
 
 	}

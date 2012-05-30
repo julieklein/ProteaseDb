@@ -7,6 +7,8 @@ public class PeptideData implements IsSerializable {
 	public int start;
 	public int end;
 	public String structure;
+	public String searchnumber;
+	public String sequence;
 	public PeptideData() {
 		
 	}

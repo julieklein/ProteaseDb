@@ -9,6 +9,6 @@ public interface DBConnectionAsync {
      * @return
 	 * @throws Throwable 
      */
-    public void getResultbySubstrateInfo(SearchRequest[] inputObject, AsyncCallback<ResultbySubstrateData[]> callback);
+    public void getResultInfo(SearchRequest[] inputObject, AsyncCallback<ResultbySubstrateData[]> callback);
 
 }
