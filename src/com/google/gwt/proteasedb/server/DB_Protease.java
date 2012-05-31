@@ -39,7 +39,7 @@ public class DB_Protease extends DB_Conn {
 	public ResultbySubstrateData[] getResultbySubstrateInfo(
 			SearchRequest[] searchRequest) throws Throwable {
 
-		String querySubstrate = "SELECT * FROM SUBSTRATE WHERE S_Symbol = ?";
+		String querySubstrate = "SELECT * FROM SUBSTRATE WHERE S_Symbol = ? OR S_UniprotId = ?";
 		String queryPeptide = "SELECT * FROM PEPTIDE WHERE Pd_Sequence = ?";
 
 		ResultbySubstrateData[] firstcapacityarray = null;
@@ -49,10 +49,11 @@ public class DB_Protease extends DB_Conn {
 		ResultbySubstrateData[] lastcapacityarray = new ResultbySubstrateData[k];
 
 		for (SearchRequest searchReq : searchRequest) {
-			String proteinrequest = searchReq.getProteininputsymbol();
-			String peptiderequest = searchReq.getPeptideinputsequence();
+			
+			
 
 			if (searchReq.getRequestnature().equalsIgnoreCase("proteinRequest")) {
+			String proteinrequest = searchReq.getProteininputsymbol();
 			Connection connection = getConn();
 			PreparedStatement ps = connection.prepareStatement(querySubstrate);
 			SubstrateData substrate = new SubstrateData();
@@ -67,8 +68,11 @@ public class DB_Protease extends DB_Conn {
 			
 			try {
 				ps.setString(1, proteinrequest);
+				ps.setString(2, proteinrequest);
+				System.out.println(ps);
 				ResultSet result = ps.executeQuery();
 				int rsSize = getResultSetSize(result);
+				System.out.println(ps);
 
 				if (rsSize == 0) {
 					firstcapacityarray = new ResultbySubstrateData[k+1];
@@ -126,6 +130,8 @@ public class DB_Protease extends DB_Conn {
 								firstcapacityarray[i].p1 = result2.getInt("P1");
 								firstcapacityarray[i].p1prime = result2
 										.getInt("P1prime");
+								firstcapacityarray[i].externallink = result2.getString("External_link");
+								firstcapacityarray[i].pmid = result2.getString("PMID");
 								firstcapacityarray[i].setEntryValidity("xxxxx");
 								firstcapacityarray[i].setNature("cleavagesite");
 								System.out.print(firstcapacityarray[i]
@@ -225,8 +231,11 @@ public class DB_Protease extends DB_Conn {
 										intermediatecapacityarray[i] = new ResultbySubstrateData();
 										SubstrateData substrate2 = new SubstrateData();
 										substrate2.S_Symbol = substratesymbol;
+										substrate2.S_Uniprotid = substrateuni;
 										intermediatecapacityarray[i]
 												.setSubstrate(substrate2);
+										intermediatecapacityarray[i].pmid = result5.getString("PMID");
+										intermediatecapacityarray[i].externallink = "";
 										PeptideData peptide = new PeptideData();
 										String disease = result5
 												.getString("Pd_Disease");
@@ -274,6 +283,7 @@ public class DB_Protease extends DB_Conn {
 							// Retrieve UNIPROT STRUCTURE PEPTIDES
 							String UniprotURL = "http://www.uniprot.org/uniprot/"
 									+ substrateuni + ".xml";
+							System.out.println(UniprotURL + "bbbbb");
 							ParseUniprotPep parser = new ParseUniprotPep();
 							Document xml = parser.getXML(UniprotURL);
 							xml.getXmlVersion();
@@ -356,6 +366,8 @@ public class DB_Protease extends DB_Conn {
 										substrate2.S_Symbol = substratesymbol;
 										substrate2.S_Uniprotid = substrateuni;
 										lastcapacityarray[i].setSubstrate(substrate2);
+										lastcapacityarray[i].pmid = "";
+										lastcapacityarray[i].externallink = "http://www.uniprot.org/uniprot/" + substrateuni;
 										lastcapacityarray[i].setEntryValidity("zzzzzzz");
 										
 										// PEPTIDE TYPE (eg Chain)
@@ -558,6 +570,7 @@ public class DB_Protease extends DB_Conn {
 			k = kLast;
 			
 		}else if (searchReq.getRequestnature().equalsIgnoreCase("peptideRequest")) {
+			String peptiderequest = searchReq.getPeptideinputsequence();
 			Connection connection = getConn();
 			PreparedStatement ps = connection.prepareStatement(queryPeptide);
 			SubstrateData substrate = new SubstrateData();
@@ -647,6 +660,64 @@ public class DB_Protease extends DB_Conn {
 			ignore.printStackTrace();
 
 		}
+		}else if(searchReq.getRequestnature().equalsIgnoreCase("csRequest")) {
+			String peptideuni = searchReq.getCsuniprot();
+			int pepstart = searchReq.getCspepstart();
+			int pepend = searchReq.getCspepend();
+			System.out.println(peptideuni +"aaaaa");
+			System.out.println(pepstart + "aaaa");
+			System.out.println(pepend + "aaaaa");
+			String fullsequence = null;
+			String pepsequence = null;
+			
+			// Retrieve PEPTIDE SEQUENCE IN UNIPROT
+			String UniprotURL = "http://www.uniprot.org/uniprot/"
+					+ peptideuni + ".xml";
+			System.out.println(UniprotURL + "bbbbb");
+			ParseUniprotPep parser = new ParseUniprotPep();
+			Document xml = parser.getXML(UniprotURL);
+			xml.getXmlVersion();
+			System.out.println(xml.getXmlVersion());
+			System.out.println(xml.toString());
+			String xmlstring = parser
+					.getXMLasstring(UniprotURL);
+			
+			// RETRIEVE ENTTRIES WITH SEQUENCE
+			// INSIDE XML
+			XPathUniprotPep XPather = new XPathUniprotPep();
+			String xpathQuery = "/uniprot/entry/sequence/text()";
+			// GET ENTRY THAT HAVE SEQUENCE NODELIST
+			NodeList getNodeListbyXPath = XPather
+					.getNodeListByXPath(xpathQuery, xml);
+			
+			if (getNodeListbyXPath.getLength() > 0) {
+				System.out.println("OK");
+				// RETRIEVE SEQUENCE  IN SELECTED ENTRIES
+				XPathNodeUniprot XPathNoder2 = new XPathNodeUniprot();
+				String xpathQueryNode2 = "/uniprot/entry/sequence/text()";
+				
+				Loop l1 = new Loop();
+
+				// FOR EACH SELECTED ENTRIE (THAT WILL BE ONLY
+				// ONE HERE BUT ANYWAY...)
+				for (int j = 0; j < getNodeListbyXPath
+						.getLength(); j++) {
+					
+					// GET SEQUENCE
+					NodeList getNodeListByXPathNoder2 = XPathNoder2
+							.getNodeListByXPath(
+									xpathQueryNode2,
+									getNodeListbyXPath.item(j));
+					LinkedList<String> stringfromNodelist2 = l1
+							.getStringfromNodelist(getNodeListByXPathNoder2);
+					fullsequence = stringfromNodelist2
+							.getFirst();	
+					fullsequence = fullsequence.replaceAll("\n", "");
+				}
+				System.out.println(fullsequence);
+				pepsequence = fullsequence.substring(pepstart-1, pepend);
+				System.out.println(pepsequence);
+			}
 		}
 		}
 		// return the array

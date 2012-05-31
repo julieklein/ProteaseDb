@@ -1,5 +1,6 @@
 @CHARSET "UTF-8";
 .cellTableWidget {
+	
 }
 
 .cellTableFirstColumn {
@@ -37,7 +38,7 @@
   /* padding: 2px 15px; */
   padding: 6px 6px 6px 6px;
   text-align: center;
-  color:#4A4A4A;
+  color:#6c6b6b;
   font-family: Arial Unicode MS, Arial, sans-serif;
   font-size: small;
 }
@@ -96,25 +97,22 @@ display:none !important;
 }
 
 .cellTableKeyboardSelectedRowCell {
-  border: selectionBorderWidth solid #ffc;
+  
 }
 
 .cellTableSelectedRow {
-  background: #628cd5;
-  color: white;
-  height: auto;
-  overflow: auto;
+  
 }
 
 .cellTableSelectedRowCell {
-  border: selectionBorderWidth solid #628cd5;
+ 
 }
 
 /**
  * The keyboard selected cell is visible over selection.
  */
 .cellTableKeyboardSelectedCell {
-  border: selectionBorderWidth solid #d7dde8;
+
 }
 
 @sprite .cellTableLoading {

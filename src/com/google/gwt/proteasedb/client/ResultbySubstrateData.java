@@ -42,6 +42,8 @@ public class ResultbySubstrateData implements IsSerializable{
 	public String cleavageSite;
 	public int p1;
 	public int p1prime;
+	public String externallink;
+	public String pmid;
 	
 	public String getEntryValidity() {
 		return entryValidity;

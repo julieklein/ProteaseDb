@@ -48,6 +48,10 @@ a, a:visited, a:hover {
  * name below, and attach it to the DOM.  Use a timer to detect when the
  * element's height and width are set to 5px.
  */
+ 
+ .mainPanel{
+ padding: 10px;
+ }
 .gwt-Reference-standard {
   height: 5px;
   width: 5px;
@@ -171,7 +175,9 @@ color:#4A4A4A;
 .
 .gwt-TabPanel {
     margin-top: 4px;
-    margin-left: 10px !important;
+    margin-left: 20px !important;
+    padding: 6px;
+    width: 10000px;
 }
 
 .gwt-TabPanelBottom {
