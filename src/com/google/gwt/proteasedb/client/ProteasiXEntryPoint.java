@@ -345,7 +345,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		String search = searchBox_1.getText().toUpperCase().trim();
 
 		String splitSearch[] = search.split("\n");
-		SortedSet<String> set = new TreeSet<String>();
+		LinkedHashSet<String> set = new LinkedHashSet<String>();
 
 		for (String searchSymbol : splitSearch) {
 			searchSymbol.toUpperCase().trim();
