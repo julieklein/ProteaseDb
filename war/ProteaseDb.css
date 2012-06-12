@@ -92,8 +92,9 @@ a, a:visited, a:hover {
 
 
 .pSearchpanel{
-margin: 10px 10px 15px 10px;	
+margin: 5px 5px 10px 5px;	
 }
+
 
 .rs-even{
 	background: #ffffff;
@@ -167,6 +168,7 @@ color:#4A4A4A;
 
 .lResult{
 	margin-top:10px;
+	margin-bottom:20px;
 	color: #737373;
 	font-size: 18px;
 	font-style: bold;
@@ -331,6 +333,8 @@ color:#4A4A4A;
 	    text-align: center;
 	    text-shadow: 0 1px 0 #eee;
 	    width: 80px;
+	    
+	    margin:10px 10px 10px 10px !important;
 	    
    }
 

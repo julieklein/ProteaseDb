@@ -7,6 +7,44 @@ public String proteininputsymbol;
 public String peptideinputsequence;
 public String requestnature;
 public String peptideinputnumber;
+public String peptideinputuni;
+public int peptideinputstart;
+public int peptideinputend;
+public int peptideinputmismatch;
+public int getPeptideinputmismatch() {
+	return peptideinputmismatch;
+}
+
+public void setPeptideinputmismatch(int peptideinputmismatch) {
+	this.peptideinputmismatch = peptideinputmismatch;
+}
+
+public String getPeptideinputuni() {
+	return peptideinputuni;
+}
+
+public void setPeptideinputuni(String peptideinputuni) {
+	this.peptideinputuni = peptideinputuni;
+}
+
+public int getPeptideinputstart() {
+	return peptideinputstart;
+}
+
+public void setPeptideinputstart(int peptideinputstart) {
+	this.peptideinputstart = peptideinputstart;
+}
+
+public int getPeptideinputend() {
+	return peptideinputend;
+}
+
+public void setPeptideinputend(int peptideinputend) {
+	this.peptideinputend = peptideinputend;
+}
+
+
+
 public String csuniprot;
 public int cspepstart;
 public int cspepend;
