@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -1611,7 +1612,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		
 		String subUni = searchBoxUni_2.getText().toUpperCase().trim();
 		String splitSearchUni[] = subUni.split("\n");
-		LinkedHashSet<String> setUni = new LinkedHashSet<String>();
+		LinkedList<String> setUni = new LinkedList<String>();
 		for (String searchUni : splitSearchUni) {
 			searchUni.toUpperCase().trim();
 			setUni.add(searchUni);
@@ -1620,10 +1621,10 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		int sizeUni = setUni.size();
 		
 		String pepID = searchBoxId_2.getText().toUpperCase().trim();
-		LinkedHashSet<String> setID = null;
+		LinkedList<String> setID = null;
 		if(!(pepID == null)) {
 		String splitSearchID[] = pepID.split("\n");
-		setID = new LinkedHashSet<String>();
+		setID = new LinkedList<String>();
 		for (String searchID : splitSearchID) {
 			searchID.toUpperCase().trim();
 			setID.add(searchID);
@@ -1640,7 +1641,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		
 		String pepStartEnd = searchBoxStartEnd_2.getText().toUpperCase().trim().toString();
 		String splitSearchStartEnd[] = pepStartEnd.split("\n");
-		LinkedHashSet<String> setStartEnd = new LinkedHashSet<String>();
+		LinkedList<String> setStartEnd = new LinkedList<String>();
 		for (String searchStartEnd : splitSearchStartEnd) {
 			searchStartEnd.toUpperCase().trim();
 			setStartEnd.add(searchStartEnd);
@@ -1649,10 +1650,10 @@ public class ProteasiXEntryPoint implements EntryPoint {
 	
 		
 		String pepSeq = searchBoxSequence_2.getText().trim();
-		LinkedHashSet<String> setSeq = null;
+		LinkedList<String> setSeq = null;
 		if(!(pepSeq == null)) {
 		String splitSearchSeq[] = pepSeq.split("\n");
-		setSeq = new LinkedHashSet<String>();
+		setSeq = new LinkedList<String>();
 		for (String searchSeq : splitSearchSeq) {
 			searchSeq.trim();
 			setSeq.add(searchSeq);

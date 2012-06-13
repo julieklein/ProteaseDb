@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -11,6 +12,7 @@ import com.google.gwt.proteasedb.client.CsJava_1;
 import com.google.gwt.proteasedb.client.DisPepJava_1;
 
 import com.google.gwt.proteasedb.client.Loop;
+import com.google.gwt.proteasedb.client.Mismatch;
 import com.google.gwt.proteasedb.client.XPathNodeUniprot;
 import com.google.gwt.proteasedb.client.XPathUniprotPep;
 import com.google.gwt.proteasedb.client.ParseUniprotPep;
@@ -110,6 +112,50 @@ public class DB_Protease extends DB_Conn {
 			result2.close();
 			ps2.clearParameters();
 			ps2.close();
+			connection2.close();
+		} catch (Throwable ignore) {
+			System.err.println("Mysql Statement Error: " + queryCleavagesite);
+			ignore.printStackTrace();
+		}
+		return csjava;
+	}
+
+
+	public CsJava_1[] getCsMISMATCHinSql(String queryCleavagesite, String substrateuni, int pepstart, int pepend, String searchnumber, String terminus, String nOrC)
+			throws Throwable {
+		Connection connection2 = getConn();
+		Statement s2 = connection2.createStatement();
+		CsJava_1[] csjava = null;
+		try {
+			
+			System.out.println(s2);
+			ResultSet result2 = s2.executeQuery(queryCleavagesite);
+			// init object into the size we need, like a recordset
+			int rsSize2 = getResultSetSize(result2);
+			System.out.println(rsSize2 + "avant");
+
+			int i = 0;
+
+			csjava = new CsJava_1[rsSize2];
+			while (result2.next()) {
+				csjava[i] = new CsJava_1();
+				csjava[i].CleavageSite_Sequence = result2
+						.getString("CleavageSite_Sequence");
+				csjava[i].P1 = result2.getInt("P1");
+				csjava[i].P1prime = result2.getInt("P1prime");
+				csjava[i].substratesymbol = result2.getString("S_Symbol");
+				csjava[i].External_link = result2.getString("External_link");
+				csjava[i].PMID = result2.getString("PMID");
+				csjava[i].P_UniprotId = result2.getString("P_UniprotId");
+				csjava[i].CleavageSite_onPeptide = terminus;
+				csjava[i].CleavageSite_NorC = nOrC;
+				csjava[i].searchnumber = searchnumber;				
+				i++;
+			}
+
+			// clean up
+			result2.close();
+			s2.close();
 			connection2.close();
 		} catch (Throwable ignore) {
 			System.err.println("Mysql Statement Error: " + queryCleavagesite);
@@ -569,9 +615,14 @@ public class DB_Protease extends DB_Conn {
 					"peptideRequest")) {
 
 				int kFirst = 0;
-				int kInt = 0;
+				int kIntN = 0;
+				int kIntC = 0;
 				int kLast = 0;
-
+				
+				ResultbySubstrateData[] intermediatecapacityarrayNterm = null;
+				ResultbySubstrateData[] intermediatecapacityarrayCterm = null;
+				
+							
 				String csvalidity = null;
 				String dispepvalidity = null;
 
@@ -583,6 +634,7 @@ public class DB_Protease extends DB_Conn {
 				String queryPeptide = "SELECT * FROM PEPTIDE WHERE S_Uniprotid = ? AND Pd_Start = ? AND Pd_end = ?";
 
 				String pepSubstrateId = searchReq.getPeptideinputuni();
+				String pepNumber = searchReq.getPeptideinputnumber();
 				int pepStart = searchReq.getPeptideinputstart();
 				int pepEnd = searchReq.getPeptideinputend();
 
@@ -608,7 +660,7 @@ public class DB_Protease extends DB_Conn {
 					// array
 					if (rsSize1 == 0) {
 						dispepvalidity = "no";
-						kFirst = 1;
+						kFirst = k;
 
 					} else {
 						dispepvalidity = "yes";
@@ -651,6 +703,11 @@ public class DB_Protease extends DB_Conn {
 							firstcapacityarray[i].setPeptide(peptide);
 							firstcapacityarray[i].setNature("peptide");
 							firstcapacityarray[i].setEntryValidity("xxxxx");
+							firstcapacityarray[i].setCSInput_substrate(pepSubstrateId);
+							firstcapacityarray[i].setCSInput_start(pepStart);
+							firstcapacityarray[i].setCSInput_end(pepEnd);
+							firstcapacityarray[i].setCSInput_number(pepNumber);
+
 							i++;
 						}
 					} else if (rsSize1 == 0) {
@@ -781,302 +838,603 @@ public class DB_Protease extends DB_Conn {
 				String c4 = cTerm.substring(3, 4);
 				String c5 = cTerm.substring(4, 5);
 				String c6 = cTerm.substring(5, 6);
-
-				String csNquery0 = null;
-
-				String csNquery1_1 = null;
-				String csNquery1_2 = null;
-				String csNquery1_3 = null;
-				String csNquery1_4 = null;
-				String csNquery1_5 = null;
-				String csNquery1_6 = null;
-
-				String csNquery2_1 = null;
-				String csNquery2_2 = null;
-				String csNquery2_3 = null;
-				String csNquery2_4 = null;
-				String csNquery2_5 = null;
-				String csNquery2_6 = null;
-				String csNquery2_7 = null;
-				String csNquery2_8 = null;
-				String csNquery2_9 = null;
-				String csNquery2_10 = null;
-				String csNquery2_11 = null;
-				String csNquery2_12 = null;
-				String csNquery2_13 = null;
-				String csNquery2_14 = null;
-				String csNquery2_15 = null;
 				
-				String csNquery3_1 = null;
-				String csNquery3_2 = null;
-				String csNquery3_3 = null;
-				String csNquery3_4 = null;
-				String csNquery3_5 = null;
-				String csNquery3_6 = null;
-				String csNquery3_7 = null;
-				String csNquery3_8 = null;
-				String csNquery3_9 = null;
-				String csNquery3_10 = null;
-				String csNquery3_11 = null;
-				String csNquery3_12 = null;
-				String csNquery3_13 = null;
-				String csNquery3_14 = null;
-				String csNquery3_15 = null;
-				String csNquery3_16 = null;
-				String csNquery3_17 = null;
-				String csNquery3_18 = null;
-				String csNquery3_19 = null;
-				String csNquery3_20 = null;
+				Mismatch mismN0[] = new Mismatch [1];
+				int numismN0 = 1;
+				for (int i = 0; i<numismN0; i++) {
+				mismN0[i] = new Mismatch();
+				mismN0[i].setSubstratesymbol(substratesymbol);
+				mismN0[i].setSearchnumber(searchnumber);
+				}
+				
+				Mismatch mismC0[] = new Mismatch [1];
+				int numismC0 = 1;
+				for (int i = 0; i<numismC0; i++) {
+				mismC0[i] = new Mismatch();
+				mismC0[i].setSubstratesymbol(substratesymbol);
+				mismC0[i].setSearchnumber(searchnumber);
+				}
+				
+				Mismatch mismN1[] = new Mismatch [6];
+				int numismN1 = 6;
+				for (int i = 0; i<numismN1; i++) {
+				mismN1[i] = new Mismatch();
+				mismN1[i].setSubstratesymbol(substratesymbol);
+				mismN1[i].setSearchnumber(searchnumber);
+				}
+				
+				Mismatch mismC1[] = new Mismatch [6];
+				int numismC1 = 6;
+				for (int i = 0; i<numismC1; i++) {
+				mismC1[i] = new Mismatch();
+				mismC1[i].setSubstratesymbol(substratesymbol);
+				mismC1[i].setSearchnumber(searchnumber);
+				}
+				
+				Mismatch mismN2[] = new Mismatch [15];
+				int numismN2 = 15;
+				for (int i = 0; i<numismN2; i++) {
+				mismN2[i] = new Mismatch();
+				mismN2[i].setSubstratesymbol(substratesymbol);
+				mismN2[i].setSearchnumber(searchnumber);
+				}
+				
+				Mismatch mismC2[] = new Mismatch [15];
+				int numismC2 = 15;
+				for (int i = 0; i<numismC2; i++) {
+				mismC2[i] = new Mismatch();
+				mismC2[i].setSubstratesymbol(substratesymbol);
+				mismC2[i].setSearchnumber(searchnumber);
+				}
+				
+				Mismatch mismN3[] = new Mismatch [20];
+				int numismN3 = 20;
+				for (int i = 0; i<numismN3; i++) {
+				mismN3[i] = new Mismatch();
+				mismN3[i].setSubstratesymbol(substratesymbol);
+				mismN3[i].setSearchnumber(searchnumber);
+				}
+				
+				Mismatch mismC3[] = new Mismatch [20];
+				int numismC3 = 20;
+				for (int i = 0; i<numismC3; i++) {
+				mismC3[i] = new Mismatch();
+				mismC3[i].setSubstratesymbol(substratesymbol);
+				mismC3[i].setSearchnumber(searchnumber);
+				}
+				
+				mismN0[0].setCs_pattern(n1 + n2 + n3 + n4 + n5 + n6);
+				mismN0[0].setTerminus("NTerm");
+				mismN0[0].setCs(nTerm);
+				mismC0[0].setCs_pattern(c1 + c2 + c3 + c4 + c5 + c6);
+				mismC0[0].setTerminus("CTerm");
+				mismC0[0].setCs(cTerm);
+
+				mismN1[0].setCs_pattern("_" + n2 + n3 + n4 + n5 + n6);
+				mismN1[1].setCs_pattern(n1 + "_" + n3 + n4 + n5 + n6);
+				mismN1[2].setCs_pattern(n1 + n2 + "_" + n4 + n5 + n6);
+				mismN1[3].setCs_pattern(n1 + n2 + n3 + "_" + n5 + n6);
+				mismN1[4].setCs_pattern(n1 + n2 + n3 + n4 + "_" + n6);
+				mismN1[5].setCs_pattern(n1 + n2 + n3 + n4 + n5 + "_");
+				for (int i=0; i<6; i++) {
+					mismN1[i].setTerminus("NTerm");
+					mismN1[i].setCs(nTerm);
+				}
 				
 
-				String csCquery0 = null;
+				mismC1[0].setCs_pattern("_" + c2 + c3 + c4 + c5 + c6);
+				mismC1[1].setCs_pattern(c1 + "_" + c3 + c4 + c5 + c6);
+				mismC1[2].setCs_pattern(c1 + c2 + "_" + c4 + c5 + c6);
+				mismC1[3].setCs_pattern(c1 + c2 + c3 + "_" + c5 + c6);
+				mismC1[4].setCs_pattern(c1 + c2 + c3 + c4 + "_" + c6);
+				mismC1[5].setCs_pattern(c1 + c2 + c3 + c4 + c5 + "_");
+				for (int i=0; i<6; i++) {
+					mismC1[i].setTerminus("CTerm");
+					mismC1[i].setCs(cTerm);
+				}
 
-				String csCquery1_1 = null;
-				String csCquery1_2 = null;
-				String csCquery1_3 = null;
-				String csCquery1_4 = null;
-				String csCquery1_5 = null;
-				String csCquery1_6 = null;
+				mismN2[0].setCs_pattern("_" + "_" + n3 + n4 + n5 + n6);
+				mismN2[1].setCs_pattern("_" + n2 + "_" + n4 + n5 + n6);
+				mismN2[2].setCs_pattern("_" + n2 + n3 + "_" + n5 + n6);
+				mismN2[3].setCs_pattern("_" + n2 + n3 + n4 + "_" + n6);
+				mismN2[4].setCs_pattern("_" + n2 + n3 + n4 + n5 + "_");
+				mismN2[5].setCs_pattern(n1 + "_" + "_" + n4 + n5 + n6);
+				mismN2[6].setCs_pattern(n1 + "_" + n3 + "_" + n5 + n6);
+				mismN2[7].setCs_pattern(n1 + "_" + n3 + n4 + "_" + n6);
+				mismN2[8].setCs_pattern(n1 + "_" + n3 + n4 + n5 + "_");
+				mismN2[9].setCs_pattern(n1 + n2 + "_" + "_" + n5 + n6);
+				mismN2[10].setCs_pattern(n1 + n2 + "_" + n4 + "_" + n6);
+				mismN2[11].setCs_pattern(n1 + n2 + "_" + n4 + n5 + "_");
+				mismN2[12].setCs_pattern(n1 + n2 + n3 + "_" + "_" + n6);
+				mismN2[13].setCs_pattern(n1 + n2 + n3 + "_" + n5 + "_");
+				mismN2[14].setCs_pattern(n1 + n2 + n3 + n4 + "_" + "_");
+				for (int i=0; i<15; i++) {
+					mismN2[i].setTerminus("NTerm");
+					mismN2[i].setCs(nTerm);
+				}
 
-				String csCquery2_1 = null;
-				String csCquery2_2 = null;
-				String csCquery2_3 = null;
-				String csCquery2_4 = null;
-				String csCquery2_5 = null;
-				String csCquery2_6 = null;
-				String csCquery2_7 = null;
-				String csCquery2_8 = null;
-				String csCquery2_9 = null;
-				String csCquery2_10 = null;
-				String csCquery2_11 = null;
-				String csCquery2_12 = null;
-				String csCquery2_13 = null;
-				String csCquery2_14 = null;
-				String csCquery2_15 = null;
-
-				String csCquery3_1 = null;
-				String csCquery3_2 = null;
-				String csCquery3_3 = null;
-				String csCquery3_4 = null;
-				String csCquery3_5 = null;
-				String csCquery3_6 = null;
-				String csCquery3_7 = null;
-				String csCquery3_8 = null;
-				String csCquery3_9 = null;
-				String csCquery3_10 = null;
-				String csCquery3_11 = null;
-				String csCquery3_12 = null;
-				String csCquery3_13 = null;
-				String csCquery3_14 = null;
-				String csCquery3_15 = null;
-				String csCquery3_16 = null;
-				String csCquery3_17 = null;
-				String csCquery3_18 = null;
-				String csCquery3_19 = null;
-				String csCquery3_20 = null;
-
-				csNquery0 = n1 + n2 + n3 + n4 + n5 + n6;
-				csCquery0 = c1 + c2 + c3 + c4 + c5 + c6;
-
-				csNquery1_1 = "_" + n2 + n3 + n4 + n5 + n6;
-				csNquery1_2 = n1 + "_" + n3 + n4 + n5 + n6;
-				csNquery1_3 = n1 + n2 + "_" + n4 + n5 + n6;
-				csNquery1_4 = n1 + n2 + n3 + "_" + n5 + n6;
-				csNquery1_5 = n1 + n2 + n3 + n4 + "_" + n6;
-				csNquery1_6 = n1 + n2 + n3 + n4 + n5 + "_";
-
-				csCquery1_1 = "_" + c2 + c3 + c4 + c5 + c6;
-				csCquery1_2 = c1 + "_" + c3 + c4 + c5 + c6;
-				csCquery1_3 = c1 + c2 + "_" + c4 + c5 + c6;
-				csCquery1_4 = c1 + c2 + c3 + "_" + c5 + c6;
-				csCquery1_5 = c1 + c2 + c3 + c4 + "_" + c6;
-				csCquery1_6 = c1 + c2 + c3 + c4 + c5 + "_";
-
-				csNquery2_1 = "_" + "_" + n3 + n4 + n5 + n6;
-				csNquery2_2 = "_" + n2 + "_" + n4 + n5 + n6;
-				csNquery2_3 = "_" + n2 + n3 + "_" + n5 + n6;
-				csNquery2_4 = "_" + n2 + n3 + n4 + "_" + n6;
-				csNquery2_5 = "_" + n2 + n3 + n4 + n5 + "_";
-				csNquery2_6 = n1 + "_" + "_" + n4 + n5 + n6;
-				csNquery2_7 = n1 + "_" + n3 + "_" + n5 + n6;
-				csNquery2_8 = n1 + "_" + n3 + n4 + "_" + n6;
-				csNquery2_9 = n1 + "_" + n3 + n4 + n5 + "_";
-				csNquery2_10 = n1 + n2 + "_" + "_" + n5 + n6;
-				csNquery2_11 = n1 + n2 + "_" + n4 + "_" + n6;
-				csNquery2_12 = n1 + n2 + "_" + n4 + n5 + "_";
-				csNquery2_13 = n1 + n2 + n3 + "_" + "_" + n6;
-				csNquery2_14 = n1 + n2 + n3 + "_" + n5 + "_";
-				csNquery2_15 = n1 + n2 + n3 + n4 + "_" + "_";
-
-				csCquery2_1 = "_" + "_" + c3 + c4 + c5 + c6;
-				csCquery2_2 = "_" + c2 + "_" + c4 + c5 + c6;
-				csCquery2_3 = "_" + c2 + c3 + "_" + c5 + c6;
-				csCquery2_4 = "_" + c2 + c3 + c4 + "_" + c6;
-				csCquery2_5 = "_" + c2 + c3 + c4 + c5 + "_";
-				csCquery2_6 = c1 + "_" + "_" + c4 + c5 + c6;
-				csCquery2_7 = c1 + "_" + c3 + "_" + c5 + c6;
-				csCquery2_8 = c1 + "_" + c3 + c4 + "_" + c6;
-				csCquery2_9 = c1 + "_" + c3 + c4 + c5 + "_";
-				csCquery2_10 = c1 + c2 + "_" + "_" + c5 + c6;
-				csCquery2_11 = c1 + c2 + "_" + c4 + "_" + c6;
-				csCquery2_12 = c1 + c2 + "_" + c4 + c5 + "_";
-				csCquery2_13 = c1 + c2 + c3 + "_" + "_" + c6;
-				csCquery2_14 = c1 + c2 + c3 + "_" + c5 + "_";
-				csCquery2_15 = c1 + c2 + c3 + c4 + "_" + "_";
+				mismC2[0].setCs_pattern("_" + "_" + c3 + c4 + c5 + c6);
+				mismC2[1].setCs_pattern("_" + c2 + "_" + c4 + c5 + c6);
+				mismC2[2].setCs_pattern("_" + c2 + c3 + "_" + c5 + c6);
+				mismC2[3].setCs_pattern("_" + c2 + c3 + c4 + "_" + c6);
+				mismC2[4].setCs_pattern("_" + c2 + c3 + c4 + c5 + "_");
+				mismC2[5].setCs_pattern(c1 + "_" + "_" + c4 + c5 + c6);
+				mismC2[6].setCs_pattern(c1 + "_" + c3 + "_" + c5 + c6);
+				mismC2[7].setCs_pattern(c1 + "_" + c3 + c4 + "_" + c6);
+				mismC2[8].setCs_pattern(c1 + "_" + c3 + c4 + c5 + "_");
+				mismC2[9].setCs_pattern(c1 + c2 + "_" + "_" + c5 + c6);
+				mismC2[10].setCs_pattern(c1 + c2 + "_" + c4 + "_" + c6);
+				mismC2[11].setCs_pattern(c1 + c2 + "_" + c4 + c5 + "_");
+				mismC2[12].setCs_pattern(c1 + c2 + c3 + "_" + "_" + c6);
+				mismC2[13].setCs_pattern(c1 + c2 + c3 + "_" + c5 + "_");
+				mismC2[14].setCs_pattern(c1 + c2 + c3 + c4 + "_" + "_");
+				for (int i=0; i<15; i++) {
+					mismC2[i].setTerminus("CTerm");
+					mismC2[i].setCs(cTerm);
+				}
 				
-				csNquery3_1 = "_" + "_" + "_" + n4 + n5 + n6;				
-				csNquery3_2 = "_" + "_" + n3 + "_" + n5 + n6;
-				csNquery3_3 = "_" + "_" + n3 + n4 + "_" + n6;
-				csNquery3_4 = "_" + "_" + n3 + n4 + n5 + "_";			
-				csNquery3_5 = "_" + n2 + "_" + "_" + n5 + n6;
-				csNquery3_6 = "_" + n2 + "_" + n4 + "_" + n6;
-				csNquery3_7 = "_" + n2 + "_" + n4 + n5 + "_";
-				csNquery3_8 = "_" + n2 + n3 + "_" + "_" + n6;
-				csNquery3_9 = "_" + n2 + n3 + "_" + n5 + "_";			
-				csNquery3_10 = "_" + n2 + n3 + n4 + "_" + "_";
-				csNquery3_11 = n1 + "_" + "_" + "_" + n5 + n6;
-				csNquery3_12 = n1 + "_" + "_" + n4 + "_" + n6;
-				csNquery3_13 = n1 + "_" + "_" + n4 + n5 + "_";
-				csNquery3_14 = n1 + "_" + n3 + "_" + "_" + n6;
-				csNquery3_15 = n1 + "_" + n3 + "_" + n5 + "_";
-				csNquery3_16 = n1 + "_" + n3 + n4 + "_" + "_";			
-				csNquery3_17 = n1 + n2 + "_" + "_" + "_" + n6;
-				csNquery3_18 = n1 + n2 + "_" + "_" + n5 + "_";
-				csNquery3_19 = n1 + n2 + "_" + n4 + "_" + "_";		
-				csNquery3_20 = n1 + n2 + n3 + "_" + "_" + "_";
+				mismN3[0].setCs_pattern("_" + "_" + "_" + n4 + n5 + n6);				
+				mismN3[1].setCs_pattern("_" + "_" + n3 + "_" + n5 + n6);
+				mismN3[2].setCs_pattern("_" + "_" + n3 + n4 + "_" + n6);
+				mismN3[3].setCs_pattern("_" + "_" + n3 + n4 + n5 + "_");			
+				mismN3[4].setCs_pattern("_" + n2 + "_" + "_" + n5 + n6);
+				mismN3[5].setCs_pattern("_" + n2 + "_" + n4 + "_" + n6);
+				mismN3[6].setCs_pattern("_" + n2 + "_" + n4 + n5 + "_");
+				mismN3[7].setCs_pattern("_" + n2 + n3 + "_" + "_" + n6);
+				mismN3[8].setCs_pattern("_" + n2 + n3 + "_" + n5 + "_");			
+				mismN3[9].setCs_pattern("_" + n2 + n3 + n4 + "_" + "_");
+				mismN3[10].setCs_pattern(n1 + "_" + "_" + "_" + n5 + n6);
+				mismN3[11].setCs_pattern(n1 + "_" + "_" + n4 + "_" + n6);
+				mismN3[12].setCs_pattern(n1 + "_" + "_" + n4 + n5 + "_");
+				mismN3[13].setCs_pattern(n1 + "_" + n3 + "_" + "_" + n6);
+				mismN3[14].setCs_pattern(n1 + "_" + n3 + "_" + n5 + "_");
+				mismN3[15].setCs_pattern(n1 + "_" + n3 + n4 + "_" + "_");			
+				mismN3[16].setCs_pattern(n1 + n2 + "_" + "_" + "_" + n6);
+				mismN3[17].setCs_pattern(n1 + n2 + "_" + "_" + n5 + "_");
+				mismN3[18].setCs_pattern(n1 + n2 + "_" + n4 + "_" + "_");		
+				mismN3[19].setCs_pattern(n1 + n2 + n3 + "_" + "_" + "_");
+				for (int i=0; i<20; i++) {
+					mismN3[i].setTerminus("NTerm");
+					mismN3[i].setCs(nTerm);
+				}
 				
-				csCquery3_1 = "_" + "_" + "_" + c4 + c5 + c6;				
-				csCquery3_2 = "_" + "_" + c3 + "_" + c5 + c6;
-				csCquery3_3 = "_" + "_" + c3 + c4 + "_" + c6;
-				csCquery3_4 = "_" + "_" + c3 + c4 + c5 + "_";			
-				csCquery3_5 = "_" + c2 + "_" + "_" + c5 + c6;
-				csCquery3_6 = "_" + c2 + "_" + c4 + "_" + c6;
-				csCquery3_7 = "_" + c2 + "_" + c4 + c5 + "_";
-				csCquery3_8 = "_" + c2 + c3 + "_" + "_" + c6;
-				csCquery3_9 = "_" + c2 + c3 + "_" + c5 + "_";			
-				csCquery3_10 = "_" + c2 + c3 + c4 + "_" + "_";
-				csCquery3_11 = c1 + "_" + "_" + "_" + c5 + c6;
-				csCquery3_12 = c1 + "_" + "_" + c4 + "_" + c6;
-				csCquery3_13 = c1 + "_" + "_" + c4 + c5 + "_";
-				csCquery3_14 = c1 + "_" + c3 + "_" + "_" + c6;
-				csCquery3_15 = c1 + "_" + c3 + "_" + c5 + "_";
-				csCquery3_16 = c1 + "_" + c3 + c4 + "_" + "_";			
-				csCquery3_17 = c1 + c2 + "_" + "_" + "_" + c6;
-				csCquery3_18 = c1 + c2 + "_" + "_" + c5 + "_";
-				csCquery3_19 = c1 + c2 + "_" + c4 + "_" + "_";		
-				csCquery3_20 = c1 + c2 + c3 + "_" + "_" + "_";
+				mismC3[0].setCs_pattern("_" + "_" + "_" + c4 + c5 + c6);				
+				mismC3[1].setCs_pattern("_" + "_" + c3 + "_" + c5 + c6);
+				mismC3[2].setCs_pattern("_" + "_" + c3 + c4 + "_" + c6);
+				mismC3[3].setCs_pattern("_" + "_" + c3 + c4 + c5 + "_");			
+				mismC3[4].setCs_pattern("_" + c2 + "_" + "_" + c5 + c6);
+				mismC3[5].setCs_pattern("_" + c2 + "_" + c4 + "_" + c6);
+				mismC3[6].setCs_pattern("_" + c2 + "_" + c4 + c5 + "_");
+				mismC3[7].setCs_pattern("_" + c2 + c3 + "_" + "_" + c6);
+				mismC3[8].setCs_pattern("_" + c2 + c3 + "_" + c5 + "_");			
+				mismC3[9].setCs_pattern("_" + c2 + c3 + c4 + "_" + "_");
+				mismC3[10].setCs_pattern(c1 + "_" + "_" + "_" + c5 + c6);
+				mismC3[11].setCs_pattern(c1 + "_" + "_" + c4 + "_" + c6);
+				mismC3[12].setCs_pattern(c1 + "_" + "_" + c4 + c5 + "_");
+				mismC3[13].setCs_pattern(c1 + "_" + c3 + "_" + "_" + c6);
+				mismC3[14].setCs_pattern(c1 + "_" + c3 + "_" + c5 + "_");
+				mismC3[15].setCs_pattern(c1 + "_" + c3 + c4 + "_" + "_");			
+				mismC3[16].setCs_pattern(c1 + c2 + "_" + "_" + "_" + c6);
+				mismC3[17].setCs_pattern(c1 + c2 + "_" + "_" + c5 + "_");
+				mismC3[18].setCs_pattern(c1 + c2 + "_" + c4 + "_" + "_");		
+				mismC3[19].setCs_pattern(c1 + c2 + c3 + "_" + "_" + "_");
+				for (int i=0; i<20; i++) {
+					mismC3[i].setTerminus("CTerm");
+					mismC3[i].setCs(cTerm);
+				}
 				
-				String output = null;
-				
+				String prequery = "";
 				
 				if (mismatch == 0) {
-					output = "CleavageSite_Sequence = '" + csNquery0 + "' OR CleavageSite_Sequence = '" + csCquery0 + "'";
+					
+					int gaps = 0;
+					
+					//check CS in SQL 0 MM N term
+					for (int j=0; j<numismN0; j++) {
+					String cs = mismN0[j].getCs_pattern();
+					prequery = prequery + " OR CleavageSite_Sequence = '" + cs + "'";
+					}
+					prequery = prequery.replaceFirst(" OR", "");
+					String queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					System.out.println(queryCleavagesite);
+					
+					String terminus = nTerm;
+					String nOrC = "NTerm";
+					
+									
+					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					int rsSize = csjava.length;
+					System.out.println(rsSize + "apres");
+//
+					if (rsSize > 0) {
+						csvalidity = "yes";
+						kIntN = rsSize + kFirst;
+						System.out.println(kFirst + "kFirst");
+						System.out.println(kIntN + "kInt");
+					} else {
+						kIntN = kFirst;
+						System.out.println(kFirst + "kFirst");
+						System.out.println(kIntN + "kInt");
+					}
+					// size the
+					// array
+					intermediatecapacityarrayNterm = new ResultbySubstrateData[kIntN];
+					System.arraycopy(firstcapacityarray, 0, intermediatecapacityarrayNterm,
+							0, kFirst);
+
+					if (rsSize > 0) {
+						int i = kFirst;
+						for (int l = 0; l < csjava.length; l++) {
+							populateCsPERFECTSql(intermediatecapacityarrayNterm, substrate1,
+									csjava[l], i, l, pepSubstrateId, pepStart, pepEnd, pepNumber, gaps);
+							i++;
+						}
+					}
+					
+					//check CS in SQL 0 MM C term
+					prequery = "";
+					for (int j=0; j<numismC0; j++) {
+					String cs = mismC0[j].getCs_pattern();
+					prequery = prequery + " OR CleavageSite_Sequence = '" + cs + "'";
+					}
+					prequery = prequery.replaceFirst(" OR", "");
+					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					System.out.println(queryCleavagesite);
+					
+					terminus = cTerm;
+					nOrC = "CTerm";
+					
+									
+					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					int rsSizeC = csjavaC.length;
+					System.out.println(rsSizeC + "apres");
+//
+					if (rsSizeC > 0) {
+						csvalidity = "yes";
+						kIntC = rsSizeC + kIntN;
+					} else {
+						kIntC = kIntN;
+						
+					}
+					// size the
+					// array
+					intermediatecapacityarrayCterm = new ResultbySubstrateData[kIntC];
+					System.arraycopy(intermediatecapacityarrayNterm, 0, intermediatecapacityarrayCterm,
+							0, kIntN);
+
+					if (rsSizeC > 0) {
+						int i = kIntN;
+						for (int l = 0; l < csjavaC.length; l++) {
+							populateCsPERFECTSql(intermediatecapacityarrayCterm, substrate1,
+									csjavaC[l], i, l, pepSubstrateId, pepStart, pepEnd, pepNumber, gaps);
+							i++;
+						}
+					}
+					
+					lastcapacityarray = intermediatecapacityarrayCterm;
+					kLast = lastcapacityarray.length;
+					System.out.println(lastcapacityarray.length + "ROULEMENT DE TAMBOUR");
+					
 				} else if (mismatch == 1) {
-					output = "CleavageSite_Sequence = '" + csNquery0 + "' OR CleavageSite_Sequence = '" + csCquery0
-							+ "CleavageSite_Sequence = '" + csNquery1_1 + "' OR CleavageSite_Sequence = '" + csNquery1_2 + "' OR CleavageSite_Sequence = '" + csNquery1_3
-							+ "CleavageSite_Sequence = '" + csNquery1_4 + "' OR CleavageSite_Sequence = '" + csNquery1_5 + "' OR CleavageSite_Sequence = '" + csNquery1_6
-							+ "CleavageSite_Sequence = '" + csCquery1_1 + "' OR CleavageSite_Sequence = '" + csCquery1_2 + "' OR CleavageSite_Sequence = '" + csCquery1_3
-							+ "CleavageSite_Sequence = '" + csCquery1_4 + "' OR CleavageSite_Sequence = '" + csCquery1_5 + "' OR CleavageSite_Sequence = '" + csCquery1_6;
+					int gaps = 1;
+					
+					//check CS in SQL 1 MM N term
+					for (int j=0; j<numismN1; j++) {
+					String cs = mismN1[j].getCs_pattern();
+					prequery = prequery + " OR CleavageSite_Sequence LIKE '" + cs + "'";
+					}
+					prequery = prequery.replaceFirst(" OR", "");
+					String queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					System.out.println(queryCleavagesite);
+					
+					String terminus = nTerm;
+					String nOrC = "NTerm";
+					
+									
+					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					int rsSize = csjava.length;
+					System.out.println(rsSize + "apres");
+//
+					if (rsSize > 0) {
+						csvalidity = "yes";
+						kIntN = rsSize + kFirst;
+						System.out.println(kFirst + "kFirst");
+						System.out.println(kIntN + "kInt");
+					} else {
+						kIntN = kFirst;
+						System.out.println(kFirst + "kFirst");
+						System.out.println(kIntN + "kInt");
+					}
+					// size the
+					// array
+					intermediatecapacityarrayNterm = new ResultbySubstrateData[kIntN];
+					System.arraycopy(firstcapacityarray, 0, intermediatecapacityarrayNterm,
+							0, kFirst);
+
+					if (rsSize > 0) {
+						int i = kFirst;
+						for (int l = 0; l < csjava.length; l++) {
+							populateCsPERFECTSql(intermediatecapacityarrayNterm, substrate1,
+									csjava[l], i, l, pepSubstrateId, pepStart, pepEnd, pepNumber, gaps);
+							i++;
+						}
+					}
+					
+					//check CS in SQL 1 MM C term
+					prequery = "";
+					for (int j=0; j<numismC1; j++) {
+					String cs = mismC1[j].getCs_pattern();
+					prequery = prequery + " OR CleavageSite_Sequence LIKE '" + cs + "'";
+					}
+					prequery = prequery.replaceFirst(" OR", "");
+					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					System.out.println(queryCleavagesite);
+					
+					terminus = cTerm;
+					nOrC = "CTerm";
+					
+									
+					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					int rsSizeC = csjavaC.length;
+					System.out.println(rsSizeC + "apres");
+//
+					if (rsSizeC > 0) {
+						csvalidity = "yes";
+						kIntC = rsSizeC + kIntN;
+					} else {
+						kIntC = kIntN;
+						
+					}
+					// size the
+					// array
+					intermediatecapacityarrayCterm = new ResultbySubstrateData[kIntC];
+					System.arraycopy(intermediatecapacityarrayNterm, 0, intermediatecapacityarrayCterm,
+							0, kIntN);
+
+					if (rsSizeC > 0) {
+						int i = kIntN;
+						for (int l = 0; l < csjavaC.length; l++) {
+							populateCsPERFECTSql(intermediatecapacityarrayCterm, substrate1,
+									csjavaC[l], i, l, pepSubstrateId, pepStart, pepEnd, pepNumber, gaps);
+							i++;
+						}
+					}
+					
+					lastcapacityarray = intermediatecapacityarrayCterm;
+					kLast = lastcapacityarray.length;
+					System.out.println(lastcapacityarray.length + "ROULEMENT DE TAMBOUR");
+					
+					
 				} else if (mismatch == 2) {
-					output = "CleavageSite_Sequence = '" + csNquery0 + "' OR CleavageSite_Sequence = '" + csCquery0
-							+ "CleavageSite_Sequence = '" + csNquery1_1 + "' OR CleavageSite_Sequence = '" + csNquery1_2 + "' OR CleavageSite_Sequence = '" + csNquery1_3
-							+ "CleavageSite_Sequence = '" + csNquery1_4 + "' OR CleavageSite_Sequence = '" + csNquery1_5 + "' OR CleavageSite_Sequence = '" + csNquery1_6
-							+ "CleavageSite_Sequence = '" + csCquery1_1 + "' OR CleavageSite_Sequence = '" + csCquery1_2 + "' OR CleavageSite_Sequence = '" + csCquery1_3
-							+ "CleavageSite_Sequence = '" + csCquery1_4 + "' OR CleavageSite_Sequence = '" + csCquery1_5 + "' OR CleavageSite_Sequence = '" + csCquery1_6
-							+ "CleavageSite_Sequence = '" + csNquery2_1 + "' OR CleavageSite_Sequence = '" + csNquery2_2 + "' OR CleavageSite_Sequence = '" + csNquery2_3
-							+ "CleavageSite_Sequence = '" + csNquery2_4 + "' OR CleavageSite_Sequence = '" + csNquery2_5 + "' OR CleavageSite_Sequence = '" + csNquery2_6
-							+ "CleavageSite_Sequence = '" + csNquery2_7 + "' OR CleavageSite_Sequence = '" + csNquery2_8 + "' OR CleavageSite_Sequence = '" + csNquery2_9
-							+ "CleavageSite_Sequence = '" + csNquery2_10 + "' OR CleavageSite_Sequence = '" + csNquery2_11 + "' OR CleavageSite_Sequence = '" + csNquery2_12
-							+ "CleavageSite_Sequence = '" + csNquery2_13 + "' OR CleavageSite_Sequence = '" + csNquery2_14 + "' OR CleavageSite_Sequence = '" + csNquery2_15
-							+ "CleavageSite_Sequence = '" + csCquery2_1 + "' OR CleavageSite_Sequence = '" + csCquery2_2 + "' OR CleavageSite_Sequence = '" + csCquery2_3
-							+ "CleavageSite_Sequence = '" + csCquery2_4 + "' OR CleavageSite_Sequence = '" + csCquery2_5 + "' OR CleavageSite_Sequence = '" + csCquery2_6
-							+ "CleavageSite_Sequence = '" + csCquery2_7 + "' OR CleavageSite_Sequence = '" + csCquery2_8 + "' OR CleavageSite_Sequence = '" + csCquery2_9
-							+ "CleavageSite_Sequence = '" + csCquery2_10 + "' OR CleavageSite_Sequence = '" + csCquery2_11 + "' OR CleavageSite_Sequence = '" + csCquery2_12
-							+ "CleavageSite_Sequence = '" + csCquery2_13 + "' OR CleavageSite_Sequence = '" + csCquery2_14 + "' OR CleavageSite_Sequence = '" + csCquery2_15;
+					int gaps = 2;
+					
+					//check CS in SQL 2 MM N term
+					for (int j=0; j<numismN2; j++) {
+					String cs = mismN2[j].getCs_pattern();
+					prequery = prequery + " OR CleavageSite_Sequence LIKE '" + cs + "'";
+					}
+					prequery = prequery.replaceFirst(" OR", "");
+					String queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					System.out.println(queryCleavagesite);
+					
+					String terminus = nTerm;
+					String nOrC = "NTerm";
+					
+									
+					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					int rsSize = csjava.length;
+					System.out.println(rsSize + "apres");
+//
+					if (rsSize > 0) {
+						csvalidity = "yes";
+						kIntN = rsSize + kFirst;
+						System.out.println(kFirst + "kFirst");
+						System.out.println(kIntN + "kInt");
+					} else {
+						kIntN = kFirst;
+						System.out.println(kFirst + "kFirst");
+						System.out.println(kIntN + "kInt");
+					}
+					// size the
+					// array
+					intermediatecapacityarrayNterm = new ResultbySubstrateData[kIntN];
+					System.arraycopy(firstcapacityarray, 0, intermediatecapacityarrayNterm,
+							0, kFirst);
+
+					if (rsSize > 0) {
+						int i = kFirst;
+						for (int l = 0; l < csjava.length; l++) {
+							populateCsPERFECTSql(intermediatecapacityarrayNterm, substrate1,
+									csjava[l], i, l, pepSubstrateId, pepStart, pepEnd, pepNumber, gaps);
+							i++;
+						}
+					}
+					
+					//check CS in SQL 2 MM C term
+					prequery = "";
+					for (int j=0; j<numismC2; j++) {
+					String cs = mismC2[j].getCs_pattern();
+					prequery = prequery + " OR CleavageSite_Sequence LIKE '" + cs + "'";
+					}
+					prequery = prequery.replaceFirst(" OR", "");
+					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					System.out.println(queryCleavagesite);
+					
+					terminus = cTerm;
+					nOrC = "CTerm";
+					
+									
+					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					int rsSizeC = csjavaC.length;
+					System.out.println(rsSizeC + "apres");
+//
+					if (rsSizeC > 0) {
+						csvalidity = "yes";
+						kIntC = rsSizeC + kIntN;
+					} else {
+						kIntC = kIntN;
+						
+					}
+					// size the
+					// array
+					intermediatecapacityarrayCterm = new ResultbySubstrateData[kIntC];
+					System.arraycopy(intermediatecapacityarrayNterm, 0, intermediatecapacityarrayCterm,
+							0, kIntN);
+
+					if (rsSizeC > 0) {
+						int i = kIntN;
+						for (int l = 0; l < csjavaC.length; l++) {
+							populateCsPERFECTSql(intermediatecapacityarrayCterm, substrate1,
+									csjavaC[l], i, l, pepSubstrateId, pepStart, pepEnd, pepNumber, gaps);
+							i++;
+						}
+					}
+					
+					lastcapacityarray = intermediatecapacityarrayCterm;
+					kLast = lastcapacityarray.length;
+					System.out.println(lastcapacityarray.length + "ROULEMENT DE TAMBOUR");
+				
 				} else if (mismatch == 3) {
-					output = "CleavageSite_Sequence = '" + csNquery0 + "' OR CleavageSite_Sequence = '" + csCquery0
-							+ "CleavageSite_Sequence = '" + csNquery1_1 + "' OR CleavageSite_Sequence = '" + csNquery1_2 + "' OR CleavageSite_Sequence = '" + csNquery1_3
-							+ "CleavageSite_Sequence = '" + csNquery1_4 + "' OR CleavageSite_Sequence = '" + csNquery1_5 + "' OR CleavageSite_Sequence = '" + csNquery1_6
-							+ "CleavageSite_Sequence = '" + csCquery1_1 + "' OR CleavageSite_Sequence = '" + csCquery1_2 + "' OR CleavageSite_Sequence = '" + csCquery1_3
-							+ "CleavageSite_Sequence = '" + csCquery1_4 + "' OR CleavageSite_Sequence = '" + csCquery1_5 + "' OR CleavageSite_Sequence = '" + csCquery1_6
-							+ "CleavageSite_Sequence = '" + csNquery2_1 + "' OR CleavageSite_Sequence = '" + csNquery2_2 + "' OR CleavageSite_Sequence = '" + csNquery2_3
-							+ "CleavageSite_Sequence = '" + csNquery2_4 + "' OR CleavageSite_Sequence = '" + csNquery2_5 + "' OR CleavageSite_Sequence = '" + csNquery2_6
-							+ "CleavageSite_Sequence = '" + csNquery2_7 + "' OR CleavageSite_Sequence = '" + csNquery2_8 + "' OR CleavageSite_Sequence = '" + csNquery2_9
-							+ "CleavageSite_Sequence = '" + csNquery2_10 + "' OR CleavageSite_Sequence = '" + csNquery2_11 + "' OR CleavageSite_Sequence = '" + csNquery2_12
-							+ "CleavageSite_Sequence = '" + csNquery2_13 + "' OR CleavageSite_Sequence = '" + csNquery2_14 + "' OR CleavageSite_Sequence = '" + csNquery2_15
-							+ "CleavageSite_Sequence = '" + csCquery2_1 + "' OR CleavageSite_Sequence = '" + csCquery2_2 + "' OR CleavageSite_Sequence = '" + csCquery2_3
-							+ "CleavageSite_Sequence = '" + csCquery2_4 + "' OR CleavageSite_Sequence = '" + csCquery2_5 + "' OR CleavageSite_Sequence = '" + csCquery2_6
-							+ "CleavageSite_Sequence = '" + csCquery2_7 + "' OR CleavageSite_Sequence = '" + csCquery2_8 + "' OR CleavageSite_Sequence = '" + csCquery2_9
-							+ "CleavageSite_Sequence = '" + csCquery2_10 + "' OR CleavageSite_Sequence = '" + csCquery2_11 + "' OR CleavageSite_Sequence = '" + csCquery2_12
-							+ "CleavageSite_Sequence = '" + csCquery2_13 + "' OR CleavageSite_Sequence = '" + csCquery2_14 + "' OR CleavageSite_Sequence = '" + csCquery2_15
-					+ "CleavageSite_Sequence = '" + csNquery3_1 + "' OR CleavageSite_Sequence = '" + csNquery3_2 + "' OR CleavageSite_Sequence = '" + csNquery3_3
-					+ "CleavageSite_Sequence = '" + csNquery3_4 + "' OR CleavageSite_Sequence = '" + csNquery3_5 + "' OR CleavageSite_Sequence = '" + csNquery3_6
-					+ "CleavageSite_Sequence = '" + csNquery3_7 + "' OR CleavageSite_Sequence = '" + csNquery3_8 + "' OR CleavageSite_Sequence = '" + csNquery3_9
-					+ "CleavageSite_Sequence = '" + csNquery3_10 + "' OR CleavageSite_Sequence = '" + csNquery3_11 + "' OR CleavageSite_Sequence = '" + csNquery3_12
-					+ "CleavageSite_Sequence = '" + csNquery3_13 + "' OR CleavageSite_Sequence = '" + csNquery3_14 + "' OR CleavageSite_Sequence = '" + csNquery3_15
-					+ "CleavageSite_Sequence = '" + csNquery3_16 + "' OR CleavageSite_Sequence = '" + csNquery3_17 + "' OR CleavageSite_Sequence = '" + csNquery3_18
-					+ "CleavageSite_Sequence = '" + csNquery3_19 + "' OR CleavageSite_Sequence = '" + csNquery3_20
-					+ "CleavageSite_Sequence = '" + csCquery3_1 + "' OR CleavageSite_Sequence = '" + csCquery3_2 + "' OR CleavageSite_Sequence = '" + csCquery3_3
-					+ "CleavageSite_Sequence = '" + csCquery3_4 + "' OR CleavageSite_Sequence = '" + csCquery3_5 + "' OR CleavageSite_Sequence = '" + csCquery3_6
-					+ "CleavageSite_Sequence = '" + csCquery3_7 + "' OR CleavageSite_Sequence = '" + csCquery3_8 + "' OR CleavageSite_Sequence = '" + csCquery3_9
-					+ "CleavageSite_Sequence = '" + csCquery3_10 + "' OR CleavageSite_Sequence = '" + csCquery3_11 + "' OR CleavageSite_Sequence = '" + csCquery3_12
-					+ "CleavageSite_Sequence = '" + csCquery3_13 + "' OR CleavageSite_Sequence = '" + csCquery3_14 + "' OR CleavageSite_Sequence = '" + csCquery3_15
-					+ "CleavageSite_Sequence = '" + csCquery3_16 + "' OR CleavageSite_Sequence = '" + csCquery3_17 + "' OR CleavageSite_Sequence = '" + csCquery3_18
-					+ "CleavageSite_Sequence = '" + csCquery3_19 + "' OR CleavageSite_Sequence = '" + csCquery3_20;
+					int gaps = 3;
+					
+					//check CS in SQL 2 MM N term
+					for (int j=0; j<numismN3; j++) {
+					String cs = mismN3[j].getCs_pattern();
+					prequery = prequery + " OR CleavageSite_Sequence LIKE '" + cs + "'";
+					}
+					prequery = prequery.replaceFirst(" OR", "");
+					String queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					System.out.println(queryCleavagesite);
+					
+					String terminus = nTerm;
+					String nOrC = "NTerm";
+					
+									
+					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					int rsSize = csjava.length;
+					System.out.println(rsSize + "apres");
+//
+					if (rsSize > 0) {
+						csvalidity = "yes";
+						kIntN = rsSize + kFirst;
+						System.out.println(kFirst + "kFirst");
+						System.out.println(kIntN + "kInt");
+					} else {
+						kIntN = kFirst;
+						System.out.println(kFirst + "kFirst");
+						System.out.println(kIntN + "kInt");
+					}
+					// size the
+					// array
+					intermediatecapacityarrayNterm = new ResultbySubstrateData[kIntN];
+					System.arraycopy(firstcapacityarray, 0, intermediatecapacityarrayNterm,
+							0, kFirst);
+
+					if (rsSize > 0) {
+						int i = kFirst;
+						for (int l = 0; l < csjava.length; l++) {
+							populateCsPERFECTSql(intermediatecapacityarrayNterm, substrate1,
+									csjava[l], i, l, pepSubstrateId, pepStart, pepEnd, pepNumber, gaps);
+							i++;
+						}
+					}
+					
+					//check CS in SQL 3 MM C term
+					prequery = "";
+					for (int j=0; j<numismC3; j++) {
+					String cs = mismC3[j].getCs_pattern();
+					prequery = prequery + " OR CleavageSite_Sequence LIKE '" + cs + "'";
+					}
+					prequery = prequery.replaceFirst(" OR", "");
+					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					System.out.println(queryCleavagesite);
+					
+					terminus = cTerm;
+					nOrC = "CTerm";
+					
+									
+					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					int rsSizeC = csjavaC.length;
+					System.out.println(rsSizeC + "apres");
+//
+					if (rsSizeC > 0) {
+						csvalidity = "yes";
+						kIntC = rsSizeC + kIntN;
+					} else {
+						kIntC = kIntN;
+						
+					}
+					// size the
+					// array
+					intermediatecapacityarrayCterm = new ResultbySubstrateData[kIntC];
+					System.arraycopy(intermediatecapacityarrayNterm, 0, intermediatecapacityarrayCterm,
+							0, kIntN);
+
+					if (rsSizeC > 0) {
+						int i = kIntN;
+						for (int l = 0; l < csjavaC.length; l++) {
+							populateCsPERFECTSql(intermediatecapacityarrayCterm, substrate1,
+									csjavaC[l], i, l, pepSubstrateId, pepStart, pepEnd, pepNumber, gaps);
+							i++;
+						}
+					}
+					
+					lastcapacityarray = intermediatecapacityarrayCterm;
+					kLast = lastcapacityarray.length;
+					System.out.println(lastcapacityarray.length + "ROULEMENT DE TAMBOUR");
+
 					
 				}
-				
-				String queryCleavage = "SELECT * FROM CLEAVAGESITE WHERE " +  output;
-				System.out.println(queryCleavage);
+				k = kLast;
 				
 				
-			} else if (searchReq.getRequestnature().equalsIgnoreCase(
-					"csRequest")) {
-				String peptideuni = searchReq.getCsuniprot();
-				int pepstart = searchReq.getCspepstart();
-				int pepend = searchReq.getCspepend();
-				System.out.println(peptideuni + "aaaaa");
-				System.out.println(pepstart + "aaaa");
-				System.out.println(pepend + "aaaaa");
-				String fullsequence = null;
-				String pepsequence = null;
-
-				// Retrieve PEPTIDE SEQUENCE IN UNIPROT
-				Document xml = checkSubUniprot(peptideuni);
-
-				// RETRIEVE ENTTRIES WITH SEQUENCE
-				// INSIDE XML
-				XPathUniprotPep XPather = new XPathUniprotPep();
-				String xpathQuery = "/uniprot/entry/sequence/text()";
-				// GET ENTRY THAT HAVE SEQUENCE NODELIST
-				NodeList getNodeListbyXPath = XPather.getNodeListByXPath(
-						xpathQuery, xml);
-
-				if (getNodeListbyXPath.getLength() > 0) {
-					System.out.println("OK");
-					// RETRIEVE SEQUENCE IN SELECTED ENTRIES
-					XPathNodeUniprot XPathNoder2 = new XPathNodeUniprot();
-					String xpathQueryNode2 = "/uniprot/entry/sequence/text()";
-
-					Loop l1 = new Loop();
-
-					// FOR EACH SELECTED ENTRIE (THAT WILL BE ONLY
-					// ONE HERE BUT ANYWAY...)
-					for (int j1 = 0; j1 < getNodeListbyXPath.getLength(); j1++) {
-
-						// GET SEQUENCE
-						NodeList getNodeListByXPathNoder2 = XPathNoder2
-								.getNodeListByXPath(xpathQueryNode2,
-										getNodeListbyXPath.item(j1));
-						LinkedList<String> stringfromNodelist2 = l1
-								.getStringfromNodelist(getNodeListByXPathNoder2);
-						fullsequence = stringfromNodelist2.getFirst();
-						fullsequence = fullsequence.replaceAll("\n", "");
-					}
-					System.out.println(fullsequence);
-					pepsequence = fullsequence.substring(pepstart - 1, pepend);
-					System.out.println(pepsequence);
-				}
+//			} else if (searchReq.getRequestnature().equalsIgnoreCase(
+//					"csRequest")) {
+//				String peptideuni = searchReq.getCsuniprot();
+//				int pepstart = searchReq.getCspepstart();
+//				int pepend = searchReq.getCspepend();
+//				System.out.println(peptideuni + "aaaaa");
+//				System.out.println(pepstart + "aaaa");
+//				System.out.println(pepend + "aaaaa");
+//				String fullsequence = null;
+//				String pepsequence = null;
+//
+//				// Retrieve PEPTIDE SEQUENCE IN UNIPROT
+//				Document xml = checkSubUniprot(peptideuni);
+//
+//				// RETRIEVE ENTTRIES WITH SEQUENCE
+//				// INSIDE XML
+//				XPathUniprotPep XPather = new XPathUniprotPep();
+//				String xpathQuery = "/uniprot/entry/sequence/text()";
+//				// GET ENTRY THAT HAVE SEQUENCE NODELIST
+//				NodeList getNodeListbyXPath = XPather.getNodeListByXPath(
+//						xpathQuery, xml);
+//
+//				if (getNodeListbyXPath.getLength() > 0) {
+//					System.out.println("OK");
+//					// RETRIEVE SEQUENCE IN SELECTED ENTRIES
+//					XPathNodeUniprot XPathNoder2 = new XPathNodeUniprot();
+//					String xpathQueryNode2 = "/uniprot/entry/sequence/text()";
+//
+//					Loop l1 = new Loop();
+//
+//					// FOR EACH SELECTED ENTRIE (THAT WILL BE ONLY
+//					// ONE HERE BUT ANYWAY...)
+//					for (int j1 = 0; j1 < getNodeListbyXPath.getLength(); j1++) {
+//
+//						// GET SEQUENCE
+//						NodeList getNodeListByXPathNoder2 = XPathNoder2
+//								.getNodeListByXPath(xpathQueryNode2,
+//										getNodeListbyXPath.item(j1));
+//						LinkedList<String> stringfromNodelist2 = l1
+//								.getStringfromNodelist(getNodeListByXPathNoder2);
+//						fullsequence = stringfromNodelist2.getFirst();
+//						fullsequence = fullsequence.replaceAll("\n", "");
+//					}
+//					System.out.println(fullsequence);
+//					pepsequence = fullsequence.substring(pepstart - 1, pepend);
+//					System.out.println(pepsequence);
+//				}
 			}
 
 		}
@@ -1310,6 +1668,48 @@ public class DB_Protease extends DB_Conn {
 		protease.P_Symbol = splitouputprotease[1];
 		protease.P_Ecnumber = splitouputprotease[2];
 		firstcapacityarray[i].setProtease(protease);
+
+	}
+	
+	private void populateCsPERFECTSql(ResultbySubstrateData[] intermediatecapacityarray,
+			SubstrateData substrate, CsJava_1 csJava_1, int i, int j,
+			String substrateUni, int pepStart, int pepEnd, String pepNumber, int gaps) throws SQLException, Throwable {
+		ProteaseData protease = new ProteaseData();
+		intermediatecapacityarray[i] = new ResultbySubstrateData();
+		intermediatecapacityarray[i].setSubstrate(substrate);
+		intermediatecapacityarray[i].setCSInput_substrate(substrateUni);
+		intermediatecapacityarray[i].setCSInput_start(pepStart);
+		intermediatecapacityarray[i].setCSInput_end(pepEnd);
+		intermediatecapacityarray[i].setCSInput_number(pepNumber);
+		intermediatecapacityarray[i].CS_database = csJava_1.CleavageSite_Sequence;
+		
+		if (csJava_1.getCleavageSite_NorC().contains("CTerm")) {
+			intermediatecapacityarray[i].CS_terminus = csJava_1.CleavageSite_onPeptide;
+			intermediatecapacityarray[i].CS_NorCterm = "CTerm";
+		} else if (csJava_1.getCleavageSite_NorC().contains("NTerm")) {
+			intermediatecapacityarray[i].CS_terminus = csJava_1.CleavageSite_onPeptide;
+			intermediatecapacityarray[i].CS_NorCterm = "NTerm";
+
+		}
+		intermediatecapacityarray[i].p1 = csJava_1.P1;
+		intermediatecapacityarray[i].p1prime = csJava_1.P1prime;
+		intermediatecapacityarray[i].externallink = csJava_1.External_link;
+		intermediatecapacityarray[i].pmid = csJava_1.PMID;
+		intermediatecapacityarray[i].setEntryValidity("xxxxx");
+		intermediatecapacityarray[i].setNature("cleavagesite");
+		intermediatecapacityarray[i].setMismatch(gaps);
+		System.out.print(intermediatecapacityarray[i].getEntryValidity());
+		String puni = csJava_1.P_UniprotId;
+		protease.P_Uniprotid = puni;
+
+		// CHECK PROTEASE IN SQL
+		String queryProtease = "SELECT * FROM PROTEASE WHERE P_UniprotID = ?";
+		String outputprotease = getProteaseSql(queryProtease, puni);
+		String splitouputprotease[] = outputprotease.split("\n");
+		protease.P_NL_Name = splitouputprotease[0];
+		protease.P_Symbol = splitouputprotease[1];
+		protease.P_Ecnumber = splitouputprotease[2];
+		intermediatecapacityarray[i].setProtease(protease);
 
 	}
 
