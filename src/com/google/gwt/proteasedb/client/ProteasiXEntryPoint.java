@@ -6,11 +6,14 @@ import com.google.gwt.core.client.EntryPoint;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -482,6 +485,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		protein_summ_1.clear();
 		protein_cs_1.clear();
 		protein_pep_1.clear();
+		
 		// dpPeptide_1.clear();
 		// dpProtease_1.clear();
 
@@ -532,6 +536,8 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		proteinTabPanel_1.add(protein_summ_1, "Summary");
 		proteinTabPanel_1.add(protein_cs_1, "Cleavage sites");
 		proteinTabPanel_1.add(protein_pep_1, "Peptides");
+		dpDisPeptide_1.clear();
+		dpStruPeptide_1.clear();
 		protein_pep_1.add(dpDisPeptide_1);
 		protein_pep_1.add(dpStruPeptide_1);
 		dpDisPeptide_1.setOpen(true);
@@ -838,33 +844,33 @@ public class ProteasiXEntryPoint implements EntryPoint {
 
 		};
 
-		Column<ResultbySubstrateData, SafeHtml> extlinkCol = new Column<ResultbySubstrateData, SafeHtml>(
-				new SafeHtmlCell()) {
-			@Override
-			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
-				String external = resultbySubstrateData.externallink;
-				String externallink = "";
-				if (external.contains("uniprot")) {
-					externallink = "<a href=\"" + external
-							+ "\"target=\"_blank\">"
-							+ "<img src=\"/Images/logo.gif\"width=\"40\"/></a>";
-				}
-				return new SafeHtmlBuilder().appendHtmlConstant(externallink)
-						.toSafeHtml();
-
-			}
-
-		};
+//		Column<ResultbySubstrateData, SafeHtml> extlinkCol = new Column<ResultbySubstrateData, SafeHtml>(
+//				new SafeHtmlCell()) {
+//			@Override
+//			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
+//				String external = resultbySubstrateData.externallink;
+//				String externallink = "";
+//				if (external.contains("uniprot")) {
+//					externallink = "<a href=\"" + external
+//							+ "\"target=\"_blank\">"
+//							+ "<img src=\"/Images/logo.gif\"width=\"40\"/></a>";
+//				}
+//				return new SafeHtmlBuilder().appendHtmlConstant(externallink)
+//						.toSafeHtml();
+//
+//			}
+//
+//		};
 
 		Column<ResultbySubstrateData, SafeHtml> pmidCol = new Column<ResultbySubstrateData, SafeHtml>(
 				new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
-				String external = resultbySubstrateData.pmid;
+				String external = resultbySubstrateData.pmid;	
+				String pmid = "";
+				if (external.contains(";")) {
 				String valuesplit[] = external.split(";");
 				int i = 0;
-				String pmid = "";
-
 				for (String string : valuesplit) {
 					valuesplit[i].trim();
 					pmid = pmid + "; "
@@ -874,6 +880,9 @@ public class ProteasiXEntryPoint implements EntryPoint {
 					i++;
 				}
 				pmid = pmid.replaceFirst("; ", "");
+			}else {
+				pmid = "";
+			}
 				return new SafeHtmlBuilder().appendHtmlConstant(pmid)
 						.toSafeHtml();
 
@@ -896,7 +905,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		dispepTable.addColumn(sequenceCol, "Sequence");		
 		dispepTable.addColumn(diseaseCol, "\u25B2Disease\u25BC");
 		dispepTable.addColumn(regulationCol, "\u25B2Regulation\u25BC");
-		dispepTable.addColumn(extlinkCol, "External Link");
+//		dispepTable.addColumn(extlinkCol, "External Link");
 		dispepTable.addColumn(pmidCol, "Publication");
 
 		dispepTable.setColumnWidth(substrateCol, 5, Unit.EM);
@@ -1622,7 +1631,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		
 		String pepID = searchBoxId_2.getText().toUpperCase().trim();
 		LinkedList<String> setID = null;
-		if(!(pepID == null)) {
+		if((!pepID.equalsIgnoreCase(""))) {
 		String splitSearchID[] = pepID.split("\n");
 		setID = new LinkedList<String>();
 		for (String searchID : splitSearchID) {
@@ -1631,6 +1640,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			System.out.println(searchID + "ID");
 		}
 		} else {
+			setID = new LinkedList<String>();
 			for (int i=0; i<sizeUni; i++) {
 				int j = i +1;
 				String searchID = "Search " + j;
@@ -1772,8 +1782,6 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			return;
 		}
 
-//		dpExistingPeptide_2.setWidth("900px");
-//		dpNotFoundPeptide_2.setWidth("900px");
 
 		pResultPanel_2.add(lResult);
 		lResult.addStyleName("lResult");
@@ -1807,91 +1815,124 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		ResultbySubstrateData[] resultcs_2 = new ResultbySubstrateData[numbercs_2];
 		ResultbySubstrateData[] resultdispep_2 = new ResultbySubstrateData[numberdispep_2];
 		ResultbySubstrateData[] resultsumm_2 = new ResultbySubstrateData[numbersumm_2];
+
+		int k = 0;
+		int l = 0;
+		int m = 0;
 		
-//		int k = 0;
-//		int l = 0;
-//
-//		for (int i = 0; i < resultbySubstrateData.length; i++) {
-//			if (!resultbySubstrateData[i].getEntryValidity().contains(
-//					"doesn't exist")) {
-//				resultexisting[k] = resultbySubstrateData[i];
-//				k++;
-//			} else {
-//				if (resultbySubstrateData[i].getEntryValidity().contains(
-//						"doesn't exist"))
-//					resultnotfound[l] = resultbySubstrateData[i];
-//				l++;
-//			}
-//		}
-//		
-////		if (!(numberexisting == 0) && !(numbernotfound == 0)) {
-//			List<ResultbySubstrateData> resultexistinglist = Arrays
-//					.asList(resultexisting);
-//			pResultPanel_2.add(dpExistingPeptide_2);
-//			dpExistingPeptide_2.addStyleDependentName("mydp");
-//			pResultPanel_2
-//					.add(new HTML(
-//							"<div><hr style=\"height:8px;;border-width:0;color:#9FB9A8;background-color:#9FB9A8;\"></div>"));
-//
-//			pResultPanel_2.add(dpNotFoundPeptide_2);
-//			dpNotFoundPeptide_2.addStyleDependentName("mydp");
-//			pResultPanel_2.addStyleName("Label");
-//			createExistingPeptideTable(resultexisting, resultexistinglist);
-//			createNotFoundList(resultnotfound);
-//			ploading.setVisible(false);
-//
-//		} else if ((numberexisting == 0) && !(numbernotfound == 0)) {
-//			dpExistingPeptide_2.add(lnoExisting_2);
-//			pResultPanel_2.add(dpExistingPeptide_2);
-//			dpExistingPeptide_2.addStyleDependentName("mydp");
-//			pResultPanel_2
-//					.add(new HTML(
-//							"<div><hr style=\"height:8px;;border-width:0;color:#9FB9A8;background-color:#9FB9A8;\"></div>"));
-//
-//			pResultPanel_2.add(dpNotFoundPeptide_2);
-//			dpNotFoundPeptide_2.addStyleDependentName("mydp");
-//			pResultPanel_2.addStyleName("Label");
-//			createNotFoundList(resultnotfound);
-//			ploading.setVisible(false);
-//
-//		} else if (!(numberexisting == 0) && (numbernotfound == 0)) {
-//			List<ResultbySubstrateData> resultexistinglist = Arrays
-//					.asList(resultexisting);
-//			pResultPanel_2.add(dpExistingPeptide_2);
-//			dpExistingPeptide_2.addStyleDependentName("mydp");
-//			pResultPanel_2
-//					.add(new HTML(
-//							"<div><hr style=\"height:8px;;border-width:0;color:#9FB9A8;background-color:#9FB9A8;\"></div>"));
-//			dpNotFoundPeptide_2.add(lnoNotFound_2);
-//			pResultPanel_2.add(dpNotFoundPeptide_2);
-//			dpNotFoundPeptide_2.addStyleDependentName("mydp");
-//			pResultPanel_2.addStyleName("Label");
-//			createExistingPeptideTable(resultexisting, resultexistinglist);
-//			ploading.setVisible(false);
-//		}
+
+		for (int i = 0; i < resultbySubstrateData.length; i++) {
+			if (resultbySubstrateData[i].getNature().equals("cleavagesite")) {
+				resultcs_2[k] = resultbySubstrateData[i];
+				k++;
+			} else if (resultbySubstrateData[i].getNature().equals("peptide") && !(resultbySubstrateData[i].peptide.disease == null) && resultbySubstrateData[i].peptide.structure == null) {
+				resultdispep_2[l] = resultbySubstrateData[i];
+				l++;
+			}
+			if (!(resultbySubstrateData[i].getSubvalidity_1() == null)) {
+				resultsumm_2[m] = resultbySubstrateData[i];
+				m++;
+			}
+		}
+		
+        Map<String, List<Set<String>>> hmap = new HashMap<String, List<Set<String>>>();
+        for (int i = 0; i<numbercs_2; i++) {
+        	String key = resultcs_2[i].substrate.S_Symbol + resultcs_2[i].CS_terminus + resultcs_2[i].CS_database + resultcs_2[i].protease.P_Symbol;
+        	if (!hmap.containsKey(key)) {
+                List value = new ArrayList<Set<String>>();
+                for (int j = 0; j < 7; j++) {
+                    value.add(new HashSet<String>());
+                }
+                hmap.put(key, value);
+            }
+        	hmap.get(key).get(0).add(resultcs_2[i].CSInput_number);
+        	hmap.get(key).get(1).add(resultcs_2[i].CS_NorCterm);
+        	hmap.get(key).get(2).add(resultcs_2[i].substrate.S_Symbol);
+        	hmap.get(key).get(3).add(resultcs_2[i].peptide.sequence);
+        	hmap.get(key).get(4).add(resultcs_2[i].CS_terminus);
+        	hmap.get(key).get(5).add(resultcs_2[i].CS_database);
+        	hmap.get(key).get(6).add(resultcs_2[i].protease.P_Symbol);       	
+        }
+		
+        Iterator iterator = hmap.values().iterator();
+        int numbercsSHORT_2 = hmap.size();
+        ResultbySubstrateData[] resultcsSHORT_2 = new ResultbySubstrateData[numbercsSHORT_2];
+        int i= 0;
+        while (iterator.hasNext()) {
+        	SubstrateData substrate = new SubstrateData();
+        	ProteaseData protease = new ProteaseData();
+        	PeptideData peptide = new PeptideData();
+        	resultcsSHORT_2[i] = new ResultbySubstrateData();
+        	String values = iterator.next().toString();
+        	String splitarray[] = values.split("\\], \\[");
+        	String input = splitarray[0];
+        	input = input.replaceAll("\\[", "");
+        	resultcsSHORT_2[i].CSInput_number = input;
+        	resultcsSHORT_2[i].CS_NorCterm = splitarray[1];
+        	substrate.S_Symbol = splitarray[2];
+        	peptide.sequence = splitarray[3];
+        	resultcsSHORT_2[i].CS_terminus = splitarray[4];
+        	resultcsSHORT_2[i].CS_database = splitarray[5];
+        	String proteaseSymbol = splitarray[6];
+        	proteaseSymbol = proteaseSymbol.replaceAll("\\]", "");
+        	protease.P_Symbol = proteaseSymbol;
+        	resultcsSHORT_2[i].setProtease(protease);
+        	resultcsSHORT_2[i].setSubstrate(substrate);
+        	resultcsSHORT_2[i].setPeptide(peptide);	       	
+        	i++;
+        }
+        
+        
+		List<ResultbySubstrateData> resultdispeplist = Arrays
+				 .asList(resultdispep_2);
+		List<ResultbySubstrateData> resultcslist = Arrays
+				 .asList(resultcsSHORT_2);
+		List<ResultbySubstrateData> resultsummlist = Arrays
+				 .asList(resultsumm_2);
+		
+		createSummTable_2(resultsumm_2, resultsummlist);
+		createCleavageSiteTable_2(resultcsSHORT_2, resultcslist);
+		createdisPeptideTable_2(resultdispep_2, resultdispeplist);
+		ploading.setVisible(false);
+
 	}
-
-	private void createExistingPeptideTable(
-			ResultbySubstrateData[] resultexisting,
-			List<ResultbySubstrateData> resultexistinglist) {
-		int rowsexisting = resultexisting.length;
-
+	
+	private void createSummTable_2(ResultbySubstrateData[] resultsumm,
+			List<ResultbySubstrateData> resultsummlist) {
+		
+		int rowsumm = resultsumm.length;
 		CellTable.Resources ptableresources = GWT.create(PTableResources.class);
-		CellTable<ResultbySubstrateData> existingpeptideTable = new CellTable<ResultbySubstrateData>(
-				rowsexisting, ptableresources);
-		existingpeptideTable.setWidth("900px");
+		CellTable<ResultbySubstrateData> summTable = new CellTable<ResultbySubstrateData>(
+				rowsumm, ptableresources);
+		summTable.setWidth("1000px");
 
-		// Create columns
-		TextColumn<ResultbySubstrateData> searchCol = new TextColumn<ResultbySubstrateData>() {
+		TextColumn<ResultbySubstrateData> inputNumberCol = new TextColumn<ResultbySubstrateData>() {
 			@Override
 			public String getValue(ResultbySubstrateData resultbySubstrateData) {
-				return resultbySubstrateData.peptide.searchnumber;
+				String input = resultbySubstrateData.peptide.searchnumber;
+				return input;
 			}
-
 		};
+		
 
-		// Create columns
-		Column<ResultbySubstrateData, SafeHtml> sequenceCol = new Column<ResultbySubstrateData, SafeHtml>(
+		
+		Column<ResultbySubstrateData, Number> inputStartCol = new Column<ResultbySubstrateData, Number>(new NumberCell()) {
+			@Override
+			public Number getValue(ResultbySubstrateData resultbySubstrateData) {
+				int input = resultbySubstrateData.peptide.start;
+				return input;
+			}
+		};
+		
+		Column<ResultbySubstrateData, Number> inputEndCol = new Column<ResultbySubstrateData, Number>(new NumberCell()) {
+			@Override
+			public Number getValue(ResultbySubstrateData resultbySubstrateData) {
+				int input = resultbySubstrateData.peptide.end;
+				return input;
+			}
+		};
+		
+		Column<ResultbySubstrateData, SafeHtml> inputSeqCol = new Column<ResultbySubstrateData, SafeHtml>(
 				new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
@@ -1903,8 +1944,114 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			}
 
 		};
+		
+		
+		Column<ResultbySubstrateData, SafeHtml> protCol = new Column<ResultbySubstrateData, SafeHtml>(
+				new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
+				String input = null;
+				if (resultbySubstrateData.getSubvalidity_1().equals("yes")) {
+					input = "<p align=\"left\">"
+							+ resultbySubstrateData.substrate.S_Symbol + ", " + resultbySubstrateData.substrate.S_NL_Name + ", " + resultbySubstrateData.substrate.S_Uniprotid + "</p>";
+				} else if (resultbySubstrateData.getSubvalidity_1().equals("no")) {
+					input = "<p align=\"left\">Sorry, not found in the database...</p>";
+				}
+				
+				return new SafeHtmlBuilder().appendHtmlConstant(input)
+						.toSafeHtml();
+			}
 
-		// Create columns
+		};
+		
+
+		
+		Column<ResultbySubstrateData, SafeHtml> csCol = new Column<ResultbySubstrateData, SafeHtml>(
+				new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
+				String input = null;
+				if (resultbySubstrateData.getCsvalidity_1().equals("yes")) {
+					input = "<div>"
+							+ "<img src=\"/Images/check.png\"width=\"30\"/></div>";
+					
+				} else if (resultbySubstrateData.getCsvalidity_1().equals("no")) {
+					input = "<div>"
+							+ "<img src=\"/Images/cross.png\"width=\"25\"/></div>";
+				}
+				return new SafeHtmlBuilder().appendHtmlConstant(
+						input)
+						.toSafeHtml();
+			}
+		};
+		
+		Column<ResultbySubstrateData, SafeHtml> dispepCol = new Column<ResultbySubstrateData, SafeHtml>(
+				new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
+				String input = null;
+				if (resultbySubstrateData.getDispepvalidity_1().equals("yes")) {
+					input = "<div>"
+							+ "<img src=\"/Images/check.png\"width=\"30\"/></div>";
+					
+				} else if (resultbySubstrateData.getDispepvalidity_1().equals("no")) {
+					input = "<div>"
+							+ "<img src=\"/Images/cross.png\"width=\"25\"/></div>";
+				}
+				return new SafeHtmlBuilder().appendHtmlConstant(
+						input)
+						.toSafeHtml();
+			}
+		};
+		
+		
+		// Add the columns.
+		summTable.addColumn(inputNumberCol, "PeptideID");
+		summTable.addColumn(protCol, "Protein");
+		summTable.addColumn(inputStartCol, "Start");
+		summTable.addColumn(inputEndCol, "End");
+		summTable.addColumn(inputSeqCol, "Sequence");
+		summTable.addColumn(csCol, "Cleavage Sites");
+		summTable.addColumn(dispepCol, "Peptides in disease");
+		peptide_summ_2.add(summTable);
+		
+		// Create a data provider.
+				ListDataProvider<ResultbySubstrateData> summdataProvider = new ListDataProvider<ResultbySubstrateData>();
+
+				// Connect the table to the data provider.
+				summdataProvider.addDataDisplay(summTable);
+
+				// Add the data to the data provider, which automatically pushes it to
+				// the
+				// widget
+				List<ResultbySubstrateData> summlist = summdataProvider.getList();
+				for (ResultbySubstrateData summresultTable : resultsummlist) {
+					summlist.add(summresultTable);
+				}
+
+	}
+	private void createdisPeptideTable_2(ResultbySubstrateData[] resultdispep,
+			List<ResultbySubstrateData> resultdispeplist) {
+		
+	
+		int rowsdispep = resultdispep.length;
+
+		CellTable.Resources ptableresources = GWT.create(PTableResources.class);
+		CellTable<ResultbySubstrateData> dispepTable = new CellTable<ResultbySubstrateData>(
+				rowsdispep, ptableresources);
+		dispepTable.setWidth("900px");
+		
+		
+				// Create columns
+		
+		TextColumn<ResultbySubstrateData> inputNumberCol = new TextColumn<ResultbySubstrateData>() {
+			@Override
+			public String getValue(ResultbySubstrateData resultbySubstrateData) {
+				String input = resultbySubstrateData.peptide.searchnumber;
+				return input;
+			}
+		};
+		
 		Column<ResultbySubstrateData, SafeHtml> substrateCol = new Column<ResultbySubstrateData, SafeHtml>(
 				new SafeHtmlCell()) {
 			@Override
@@ -1948,6 +2095,21 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			}
 
 		};
+		
+		Column<ResultbySubstrateData, SafeHtml> sequenceCol = new Column<ResultbySubstrateData, SafeHtml>(
+				new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
+				String sequence = "<p align=\"left\"><font size=\"1\">"
+						+ resultbySubstrateData.peptide.sequence
+						+ "</font></p>";
+				return new SafeHtmlBuilder().appendHtmlConstant(sequence)
+						.toSafeHtml();
+			}
+
+		};
+
+		
 
 		TextColumn<ResultbySubstrateData> diseaseCol = new TextColumn<ResultbySubstrateData>() {
 			@Override
@@ -1978,77 +2140,125 @@ public class ProteasiXEntryPoint implements EntryPoint {
 
 		};
 
+//		Column<ResultbySubstrateData, SafeHtml> extlinkCol = new Column<ResultbySubstrateData, SafeHtml>(
+//				new SafeHtmlCell()) {
+//			@Override
+//			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
+//				String external = resultbySubstrateData.externallink;
+//				String externallink = "";
+//				if (external.contains("uniprot")) {
+//					externallink = "<a href=\"" + external
+//							+ "\"target=\"_blank\">"
+//							+ "<img src=\"/Images/logo.gif\"width=\"40\"/></a>";
+//				}
+//				return new SafeHtmlBuilder().appendHtmlConstant(externallink)
+//						.toSafeHtml();
+//
+//			}
+//
+//		};
+
+		Column<ResultbySubstrateData, SafeHtml> pmidCol = new Column<ResultbySubstrateData, SafeHtml>(
+				new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
+				String external = resultbySubstrateData.pmid;	
+				String pmid = "";
+				if (external.contains(";")) {
+				String valuesplit[] = external.split(";");
+				int i = 0;
+				for (String string : valuesplit) {
+					valuesplit[i].trim();
+					pmid = pmid + "; "
+							+ "<a href=\"http://www.ncbi.nlm.nih.gov/pubmed/"
+							+ valuesplit[i] + "\"target=\"_blank\">"
+							+ valuesplit[i] + "</a>";
+					i++;
+				}
+				pmid = pmid.replaceFirst("; ", "");
+			}else {
+				pmid = "";
+			}
+				return new SafeHtmlBuilder().appendHtmlConstant(pmid)
+						.toSafeHtml();
+
+			}
+
+		};
+
 		// Make the columns sortable.
-		searchCol.setSortable(true);
+		inputNumberCol.setSortable(true);
 		substrateCol.setSortable(true);
 		startCol.setSortable(true);
 		endCol.setSortable(true);
 		diseaseCol.setSortable(true);
 		regulationCol.setSortable(true);
 
+
 		// Add the columns.
-		existingpeptideTable.addColumn(searchCol, "Search \u25B2Number\u25BC");
-		existingpeptideTable.addColumn(sequenceCol, "Sequence");
-		existingpeptideTable.addColumn(substrateCol, "\u25B2Substrate\u25BC");
-		existingpeptideTable.addColumn(startCol, "\u25B2Start\u25BC");
-		existingpeptideTable.addColumn(endCol, "\u25B2End\u25BC");
-		existingpeptideTable.addColumn(diseaseCol, "\u25B2Disease\u25BC");
-		existingpeptideTable.addColumn(regulationCol, "\u25B2Regulation\u25BC");
+		dispepTable.addColumn(inputNumberCol, "\u25B2PeptideID\u25BC");
+		dispepTable.addColumn(substrateCol, "\u25B2Substrate\u25BC");
+		dispepTable.addColumn(startCol, "\u25B2Start\u25BC");
+		dispepTable.addColumn(endCol, "\u25B2End\u25BC");
+		dispepTable.addColumn(sequenceCol, "Sequence");		
+		dispepTable.addColumn(diseaseCol, "\u25B2Disease\u25BC");
+		dispepTable.addColumn(regulationCol, "\u25B2Regulation\u25BC");
+//		dispepTable.addColumn(extlinkCol, "External Link");
+		dispepTable.addColumn(pmidCol, "Publication");
 
-		existingpeptideTable.setColumnWidth(searchCol, 5, Unit.EM);
-		existingpeptideTable.setColumnWidth(sequenceCol, 20, Unit.EM);
-		existingpeptideTable.setColumnWidth(substrateCol, 5, Unit.EM);
-		existingpeptideTable.setColumnWidth(startCol, 2, Unit.EM);
-		existingpeptideTable.setColumnWidth(endCol, 2, Unit.EM);
-		existingpeptideTable.setColumnWidth(diseaseCol, 20, Unit.EM);
-		existingpeptideTable.setColumnWidth(regulationCol, 2, Unit.EM);
-
-		dpExistingPeptide_2.add(existingpeptideTable);
+		dispepTable.setColumnWidth(substrateCol, 5, Unit.EM);
+		dispepTable.setColumnWidth(startCol, 2, Unit.EM);
+		dispepTable.setColumnWidth(endCol, 2, Unit.EM);
+		dispepTable.setColumnWidth(sequenceCol, 20, Unit.EM);
+		dispepTable.setColumnWidth(diseaseCol, 20, Unit.EM);
+		dispepTable.setColumnWidth(regulationCol, 2, Unit.EM);
+	
+		peptide_pep_2.add(dispepTable);	
 
 		// Create a data provider.
-		ListDataProvider<ResultbySubstrateData> existingdataProvider = new ListDataProvider<ResultbySubstrateData>();
+		ListDataProvider<ResultbySubstrateData> pepdataProvider = new ListDataProvider<ResultbySubstrateData>();
 
 		// Connect the table to the data provider.
-		existingdataProvider.addDataDisplay(existingpeptideTable);
-
+		pepdataProvider.addDataDisplay(dispepTable);
+		
 		// Add the data to the data provider, which automatically pushes it to
 		// the
 		// widget
-		List<ResultbySubstrateData> existinglist = existingdataProvider
-				.getList();
-		for (ResultbySubstrateData existingTable : resultexistinglist) {
-			existinglist.add(existingTable);
+		List<ResultbySubstrateData> peplist = pepdataProvider.getList();
+		for (ResultbySubstrateData pepresultTable : resultdispeplist) {
+			peplist.add(pepresultTable);
 		}
-
+		
 		// Add a ColumnSortEvent.ListHandler to connect sorting to the
-		// java.util.List.
-		ListHandler<ResultbySubstrateData> searchColSortHandler = new ListHandler<ResultbySubstrateData>(
-				existinglist);
-		searchColSortHandler.setComparator(searchCol,
-				new Comparator<ResultbySubstrateData>() {
-					public int compare(ResultbySubstrateData o1,
-							ResultbySubstrateData o2) {
-						if (o1 == o2) {
-							return 0;
-						}
+				// java.util.List.
+				ListHandler<ResultbySubstrateData> pepNumberColSortHandler = new ListHandler<ResultbySubstrateData>(
+						peplist);
+				pepNumberColSortHandler.setComparator(inputNumberCol,
+						new Comparator<ResultbySubstrateData>() {
+							public int compare(ResultbySubstrateData o1,
+									ResultbySubstrateData o2) {
+								if (o1 == o2) {
+									return 0;
+								}
 
-						// Compare the symbol columns.
-						if (o1 != null) {
-							return (o2 != null) ? o1.peptide.searchnumber
-									.compareTo(o2.peptide.searchnumber) : 1;
-						}
-						return -1;
-					}
-				});
-		existingpeptideTable.addColumnSortHandler(searchColSortHandler);
+								// Compare the symbol columns.
+								if (o1 != null) {
+									return (o2 != null) ? o1.peptide.searchnumber
+											.compareTo(o2.peptide.searchnumber) : 1;
+								}
+								return -1;
+							}
+						});
+				dispepTable.addColumnSortHandler(pepNumberColSortHandler);
 
-		// We know that the data is sorted alphabetically by default.
-		existingpeptideTable.getColumnSortList().push(searchCol);
-
+				// We know that the data is sorted alphabetically by default.
+				dispepTable.getColumnSortList().push(inputNumberCol);
+		
+		
 		// Add a ColumnSortEvent.ListHandler to connect sorting to the
 		// java.util.List.
 		ListHandler<ResultbySubstrateData> pepsubstrateColSortHandler = new ListHandler<ResultbySubstrateData>(
-				existinglist);
+				peplist);
 		pepsubstrateColSortHandler.setComparator(substrateCol,
 				new Comparator<ResultbySubstrateData>() {
 					public int compare(ResultbySubstrateData o1,
@@ -2065,15 +2275,16 @@ public class ProteasiXEntryPoint implements EntryPoint {
 						return -1;
 					}
 				});
-		existingpeptideTable.addColumnSortHandler(pepsubstrateColSortHandler);
+		dispepTable.addColumnSortHandler(pepsubstrateColSortHandler);
 
 		// We know that the data is sorted alphabetically by default.
-		existingpeptideTable.getColumnSortList().push(substrateCol);
+		dispepTable.getColumnSortList().push(substrateCol);
+		
 
 		// Add a ColumnSortEvent.ListHandler to connect sorting to the
 		// java.util.List.
 		ListHandler<ResultbySubstrateData> startColSortHandler = new ListHandler<ResultbySubstrateData>(
-				existinglist);
+				peplist);
 		startColSortHandler.setComparator(startCol,
 				new Comparator<ResultbySubstrateData>() {
 					public int compare(ResultbySubstrateData o1,
@@ -2091,15 +2302,16 @@ public class ProteasiXEntryPoint implements EntryPoint {
 						return -1;
 					}
 				});
-		existingpeptideTable.addColumnSortHandler(startColSortHandler);
+		dispepTable.addColumnSortHandler(startColSortHandler);
 
 		// We know that the data is sorted alphabetically by default.
-		existingpeptideTable.getColumnSortList().push(startCol);
+		dispepTable.getColumnSortList().push(startCol);
+		
 
 		// Add a ColumnSortEvent.ListHandler to connect sorting to the
 		// java.util.List.
 		ListHandler<ResultbySubstrateData> endColSortHandler = new ListHandler<ResultbySubstrateData>(
-				existinglist);
+				peplist);
 		endColSortHandler.setComparator(endCol,
 				new Comparator<ResultbySubstrateData>() {
 					public int compare(ResultbySubstrateData o1,
@@ -2117,15 +2329,17 @@ public class ProteasiXEntryPoint implements EntryPoint {
 						return -1;
 					}
 				});
-		existingpeptideTable.addColumnSortHandler(endColSortHandler);
+		dispepTable.addColumnSortHandler(endColSortHandler);
 
 		// We know that the data is sorted alphabetically by default.
-		existingpeptideTable.getColumnSortList().push(endCol);
+		dispepTable.getColumnSortList().push(endCol);
+		
+	
 
 		// Add a ColumnSortEvent.ListHandler to connect sorting to the
 		// java.util.List.
 		ListHandler<ResultbySubstrateData> diseaseColSortHandler = new ListHandler<ResultbySubstrateData>(
-				existinglist);
+				peplist);
 		diseaseColSortHandler.setComparator(diseaseCol,
 				new Comparator<ResultbySubstrateData>() {
 					public int compare(ResultbySubstrateData o1,
@@ -2142,15 +2356,15 @@ public class ProteasiXEntryPoint implements EntryPoint {
 						return -1;
 					}
 				});
-		existingpeptideTable.addColumnSortHandler(diseaseColSortHandler);
+		dispepTable.addColumnSortHandler(diseaseColSortHandler);
 
 		// We know that the data is sorted alphabetically by default.
-		existingpeptideTable.getColumnSortList().push(diseaseCol);
+		dispepTable.getColumnSortList().push(diseaseCol);
 
 		// Add a ColumnSortEvent.ListHandler to connect sorting to the
 		// java.util.List.
 		ListHandler<ResultbySubstrateData> regulationColSortHandler = new ListHandler<ResultbySubstrateData>(
-				existinglist);
+				peplist);
 		regulationColSortHandler.setComparator(regulationCol,
 				new Comparator<ResultbySubstrateData>() {
 					public int compare(ResultbySubstrateData o1,
@@ -2167,116 +2381,179 @@ public class ProteasiXEntryPoint implements EntryPoint {
 						return -1;
 					}
 				});
-		existingpeptideTable.addColumnSortHandler(regulationColSortHandler);
+		dispepTable.addColumnSortHandler(regulationColSortHandler);
 
 		// We know that the data is sorted alphabetically by default.
-		existingpeptideTable.getColumnSortList().push(regulationCol);
+		dispepTable.getColumnSortList().push(regulationCol);
 	}
+	
+	private void createCleavageSiteTable_2(ResultbySubstrateData[] resultcs,
+			List<ResultbySubstrateData> resultcslist) {
+		
+	
+		int rowscs= resultcs.length;
+		System.out.println(rowscs);
+		CellTable.Resources ptableresources = GWT.create(PTableResources.class);
+		CellTable<ResultbySubstrateData> csTable = new CellTable<ResultbySubstrateData>(
+				rowscs, ptableresources);
+		csTable.setWidth("900px");
+		
+		// Create columns
+		
+		TextColumn<ResultbySubstrateData> inputNumberCol = new TextColumn<ResultbySubstrateData>() {
+			@Override
+			public String getValue(ResultbySubstrateData resultbySubstrateData) {
+				String input = resultbySubstrateData.CSInput_number + " / " + resultbySubstrateData.CS_NorCterm;
+				return input;
+			}
+		};
+		
+		Column<ResultbySubstrateData, SafeHtml> substrateCol = new Column<ResultbySubstrateData, SafeHtml>(
+				new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
+				String substrate = resultbySubstrateData.substrate.S_Symbol;
+				return new SafeHtmlBuilder().appendHtmlConstant(
+						"<a href=\"http://www.uniprot.org/uniprot/"
+								+ resultbySubstrateData.substrate.S_Uniprotid
+								+ "\"target=\"_blank\">" + substrate + "</a>")
+						.toSafeHtml();
 
-	private void createNotFoundList(ResultbySubstrateData[] resultnotfound) {
-		String notfound = "";
-		int i = 0;
-		for (ResultbySubstrateData resultbySubstrateData : resultnotfound) {
-			String searchnumber = resultnotfound[i].peptide.searchnumber;
-			String sequence = resultnotfound[i].peptide.sequence;
-			notfound = notfound + searchnumber + ": " + sequence + "<BR>";
-			i++;
-		}
-		HTML lNotFound_2 = new HTML("<p>" + notfound + "</p>");
-		dpNotFoundPeptide_2.add(lNotFound_2);
+			}
+
+		};
+		
+		Column<ResultbySubstrateData, SafeHtml> sequenceCol = new Column<ResultbySubstrateData, SafeHtml>(
+				new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
+				String sequence = null;
+				if (resultbySubstrateData.CS_NorCterm.contains("N")) {
+				sequence = "<p align=\"left\"><font size=\"1\"><b>"
+						+ resultbySubstrateData.peptide.sequence.substring(0,3) + "</b>"+ resultbySubstrateData.peptide.sequence.substring(3)
+						+ "</font></p>";
+				}
+				if (resultbySubstrateData.CS_NorCterm.contains("C")) {
+					int length = resultbySubstrateData.peptide.sequence.length();
+					sequence = "<p align=\"left\"><font size=\"1\">"
+							+ resultbySubstrateData.peptide.sequence.substring(0,length-3) + "<u>"+ resultbySubstrateData.peptide.sequence.substring(length-3)
+							+ "</u></font></p>";
+					}
+				return new SafeHtmlBuilder().appendHtmlConstant(sequence)
+						.toSafeHtml();
+			}
+
+		};
+		
+		
+		Column<ResultbySubstrateData, SafeHtml> searchedCSCol = new Column<ResultbySubstrateData, SafeHtml>(
+				new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
+
+				String cleavageSite = resultbySubstrateData.CS_terminus;
+				String begin = cleavageSite.substring(0, 3);
+				String end = cleavageSite.substring(3, 6);
+				String cs = null;
+				if (resultbySubstrateData.CS_NorCterm.contains("N")) {
+				 cs = "<p>" + begin +"\u00A6 <u>"
+							+ end + "</u></p>";
+				}
+				if (resultbySubstrateData.CS_NorCterm.contains("C")) {
+					 cs = "<p><u>" + begin +"</u>\u00A6"
+								+ end + "</p>";
+					}
+
+				return new SafeHtmlBuilder().appendHtmlConstant(
+						cs)
+						.toSafeHtml();
+			}
+
+		};
+
+		
+	
+		Column<ResultbySubstrateData, SafeHtml> foundCSCol = new Column<ResultbySubstrateData, SafeHtml>(
+				new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
+				String searched = resultbySubstrateData.CS_terminus;
+				String found = resultbySubstrateData.CS_database;
+				String searchedsplit[] = searched.split("");
+				String foundsplit[] = found.split("");
+				String one = null;
+				String two = null;
+				String three = null;
+				String four = null;
+				String five = null;
+				String six = null;
+				if (searchedsplit[1].equals(foundsplit[1])) {
+					one = searchedsplit[1];
+				}else {
+					one = "<font color =\"red\">" + foundsplit[1].toLowerCase() + "</font>";		
+				}
+				if (searchedsplit[2].equals(foundsplit[2])) {
+					two = searchedsplit[2];
+				}else {
+					two = "<font color =\"red\">" + foundsplit[2].toLowerCase() + "</font>";					
+				}				
+				if (searchedsplit[3].equals(foundsplit[3])) {
+					three = searchedsplit[3];
+				}else {
+					three = "<font color =\"red\">" + foundsplit[3].toLowerCase() + "</font>";					
+				}
+				if (searchedsplit[4].equals(foundsplit[4])) {
+					four = searchedsplit[4];
+				}else {
+					four = "<font color =\"red\">" + foundsplit[4].toLowerCase() + "</font>";					
+				}
+				if (searchedsplit[5].equals(foundsplit[5])) {
+					five = searchedsplit[5];
+				}else {
+					five = "<font color =\"red\">" + foundsplit[5].toLowerCase() + "</font>";					
+				}
+				if (searchedsplit[6].equals(foundsplit[6])) {
+					six = searchedsplit[6];
+				}else {
+					six = "<font color =\"red\">" + foundsplit[6].toLowerCase() + "</font>";					
+				}
+				return new SafeHtmlBuilder().appendHtmlConstant("<p>" + one + two + three + "" +"\u00A6" + four + five + six +"</p>")
+						.toSafeHtml();
+
+			}
+
+		};
+		
+		TextColumn<ResultbySubstrateData> proteaseCol = new TextColumn<ResultbySubstrateData>() {
+			@Override
+			public String getValue(ResultbySubstrateData resultbySubstrateData) {
+				String input = resultbySubstrateData.protease.P_Symbol;
+				return input;
+			}
+		};
+	
+		
+		csTable.addColumn(inputNumberCol, "\u25B2PeptideID\u25BC");
+		csTable.addColumn(substrateCol, "\u25B2Protein\u25BC");
+		csTable.addColumn(sequenceCol, "Peptide Sequence");
+		csTable.addColumn(searchedCSCol, "Searched CS");
+		csTable.addColumn(foundCSCol, "Found CS");
+		csTable.addColumn(proteaseCol, "\u25B2Protease\u25BC");
+		peptide_cs_2.add(csTable);	
+		
+		// Create a data provider.
+				ListDataProvider<ResultbySubstrateData> csdataProvider = new ListDataProvider<ResultbySubstrateData>();
+
+				// Connect the table to the data provider.
+				csdataProvider.addDataDisplay(csTable);
+				
+				// Add the data to the data provider, which automatically pushes it to
+				// the
+				// widget
+				List<ResultbySubstrateData> cslist = csdataProvider.getList();
+				for (ResultbySubstrateData csresultTable : resultcslist) {
+					cslist.add(csresultTable);
+				}
 
 	}
-
-//	private void generateSearchRequest_3() {
-//		String search = searchBox_3.getText().toUpperCase().trim().toString();
-//		search = search.replaceAll("\\[", ",");
-//		search = search.replaceAll("\\]", "");
-//		search = search.replaceAll(" ", "");
-//		search = search.replaceAll("-", ",");
-//
-//		String splitSearch[] = search.split("\n");
-//
-//		LinkedHashSet<String> set = new LinkedHashSet<String>();
-//
-//		for (String searchPeptide : splitSearch) {
-//			searchPeptide.toUpperCase().trim();
-//			set.add(searchPeptide);
-//			System.out.println(searchPeptide + "uuu");
-//		}
-//
-//		int size = set.size();
-//		System.out.println(size);
-//
-//		Iterator iterator = set.iterator();
-//		SearchRequest[] searchRequest = new SearchRequest[size];
-//		int i = 0;
-//
-//		while (iterator.hasNext()) {
-//			String value = iterator.next().toString();
-//			System.out.println(value);
-//			String valuesplit[] = value.split("\n");
-//
-//			for (String string : valuesplit) {
-//				searchRequest[i] = new SearchRequest();
-//				String splitted[] = string.toString().split(",");
-//				searchRequest[i].setCsuniprot(splitted[0].toString().trim());
-//				System.out.println(splitted[0]);
-//				System.out.println(splitted[1]);
-//				System.out.println(splitted[2]);
-//				searchRequest[i].setCspepstart(Integer.parseInt(splitted[1]));
-//				searchRequest[i].setCspepend(Integer.parseInt(splitted[2]));
-//				int j = i + 1;
-//				String searchnumber = Integer.toString(j);
-//				searchRequest[i]
-//						.setPeptideinputnumber("Search " + searchnumber);
-//				System.out.println("Search " + searchnumber);
-//				searchRequest[i].setRequestnature("csRequest");
-//
-//				i++;
-//			}
-//		}
-//
-//		searchBox_3.setFocus(true);
-//		// searchBox_2.setText("");
-//
-//		getResultbyCsInfo_3(searchRequest);
-//
-//	}
-//
-//	private void getResultbyCsInfo_3(SearchRequest[] searchRequest) {
-//
-//		// empty if anything is there already
-//		pResultPanel_3.clear();
-//
-//		AsyncCallback callback = new AsyncCallback() {
-//
-//			// fail
-//			public void onFailure(Throwable ex) {
-//				RootPanel.get().add(new HTML(ex.toString()));
-//			}
-//
-//			// success
-//			public void onSuccess(Object result) {
-//
-//				ResultbySubstrateData[] resultbySubstrate = (ResultbySubstrateData[]) result;
-//
-//				// draw PROTEIN info
-//				drawResultbyCSInfo_3(resultbySubstrate);
-//
-//			}
-//		};
-//
-//		// remote procedure call to the server to get the bible info
-//		callProvider.getResultInfo(searchRequest, callback);
-//	}
-//
-//	private void drawResultbyCSInfo_3(
-//			ResultbySubstrateData[] resultbySubstrateData) {
-//
-//		// if null nothing to do, then exit
-//		// this will prevent errors from showing up
-//		if (resultbySubstrateData == null) {
-//			return;
-//		}
-//	}
 }

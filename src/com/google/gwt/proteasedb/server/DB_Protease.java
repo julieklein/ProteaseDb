@@ -22,6 +22,8 @@ import com.google.gwt.proteasedb.client.SubstrateData;
 import com.google.gwt.proteasedb.client.ProteaseData;
 import com.google.gwt.proteasedb.client.SearchRequest;
 import com.sun.source.tree.NewClassTree;
+
+import org.apache.commons.digester.rss.RSSDigester;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
@@ -121,7 +123,7 @@ public class DB_Protease extends DB_Conn {
 	}
 
 
-	public CsJava_1[] getCsMISMATCHinSql(String queryCleavagesite, String substrateuni, int pepstart, int pepend, String searchnumber, String terminus, String nOrC)
+	public CsJava_1[] getCsMISMATCHinSql(String queryCleavagesite, String substrateuni, int pepstart, int pepend, String searchnumber, String terminus, String nOrC, String pepsequence)
 			throws Throwable {
 		Connection connection2 = getConn();
 		Statement s2 = connection2.createStatement();
@@ -149,7 +151,9 @@ public class DB_Protease extends DB_Conn {
 				csjava[i].P_UniprotId = result2.getString("P_UniprotId");
 				csjava[i].CleavageSite_onPeptide = terminus;
 				csjava[i].CleavageSite_NorC = nOrC;
-				csjava[i].searchnumber = searchnumber;				
+				csjava[i].searchnumber = searchnumber;	
+				csjava[i].pepsequence = pepsequence;
+				
 				i++;
 			}
 
@@ -276,6 +280,12 @@ public class DB_Protease extends DB_Conn {
 		String substratesymbol = null;
 		String substrateuni = null;
 		String substratename = null;
+		
+		int kFirst = 0;
+		int kInter = 0;
+		int kLast = 0;
+		int kIntN = 0;
+		int kIntC = 0;
 
 		ResultbySubstrateData[] firstcapacityarray = null;
 		ResultbySubstrateData[] intermediatecapacityarray = null;
@@ -284,11 +294,9 @@ public class DB_Protease extends DB_Conn {
 		ResultbySubstrateData[] lastcapacityarray = new ResultbySubstrateData[k];
 
 		for (SearchRequest searchReq : searchRequest) {
-
+			
+			
 			if (searchReq.getRequestnature().equalsIgnoreCase("proteinRequest")) {
-				int kFirst = 0;
-				int kInter = 0;
-				int kLast = 0;
 
 				String subvalidity = null;
 				String csvalidity = null;
@@ -613,18 +621,17 @@ public class DB_Protease extends DB_Conn {
 
 			} else if (searchReq.getRequestnature().equalsIgnoreCase(
 					"peptideRequest")) {
-
-				int kFirst = 0;
-				int kIntN = 0;
-				int kIntC = 0;
-				int kLast = 0;
 				
+				int rsSize1 = 0;
+				System.out.println(k + "k");
 				ResultbySubstrateData[] intermediatecapacityarrayNterm = null;
 				ResultbySubstrateData[] intermediatecapacityarrayCterm = null;
 				
+				NodeList getNodeListbyXPath = null;
 							
 				String csvalidity = null;
 				String dispepvalidity = null;
+				String subvalidity = null;
 
 				String fullsequence = null;
 				String pepsequence = null;
@@ -654,15 +661,16 @@ public class DB_Protease extends DB_Conn {
 
 					System.out.println(ps);
 					ResultSet result1 = ps.executeQuery();
-					int rsSize1 = getResultSetSize(result1);
+					rsSize1 = getResultSetSize(result1);
 
 					// size the
 					// array
 					if (rsSize1 == 0) {
 						dispepvalidity = "no";
-						kFirst = k;
+						kFirst = k + 1;
 
 					} else {
+						subvalidity = "yes";
 						dispepvalidity = "yes";
 						kFirst = rsSize1 + k;
 					}
@@ -701,6 +709,7 @@ public class DB_Protease extends DB_Conn {
 							peptide.start = result1.getInt("Pd_Start");
 							peptide.end = result1.getInt("Pd_End");
 							firstcapacityarray[i].setPeptide(peptide);
+							firstcapacityarray[i].setPmid(result1.getString("Pmid"));
 							firstcapacityarray[i].setNature("peptide");
 							firstcapacityarray[i].setEntryValidity("xxxxx");
 							firstcapacityarray[i].setCSInput_substrate(pepSubstrateId);
@@ -714,13 +723,39 @@ public class DB_Protease extends DB_Conn {
 
 						// Retrieve PEPTIDE SEQUENCE IN UNIPROT
 						Document xml = checkSubUniprot(pepSubstrateId);
+						System.out.println(xml);
+						System.out.println(xml.getXmlVersion());
+						if (xml.getXmlVersion() == null) {
+							subvalidity = "no";
+							csvalidity = "no";
+							dispepvalidity = "no";
+							kFirst = k + 1;
+							kLast = kFirst;
 
+							firstcapacityarray = new ResultbySubstrateData[kFirst];
+							System.arraycopy(lastcapacityarray, 0, firstcapacityarray,
+									0, k);
+							firstcapacityarray[k] = new ResultbySubstrateData();
+							firstcapacityarray[k].setCSInput_end(pepEnd);
+							firstcapacityarray[k].setCSInput_start(pepStart);
+							firstcapacityarray[k].setCSInput_number(searchnumber);
+							firstcapacityarray[k].setCSInput_substrate(pepSubstrateId);
+							firstcapacityarray[k].setCsvalidity_1(csvalidity);
+							firstcapacityarray[k].setSubvalidity_1(subvalidity);
+							firstcapacityarray[k].setDispepvalidity_1(dispepvalidity);
+							firstcapacityarray[k].setNature("");							
+							lastcapacityarray = new ResultbySubstrateData[kLast];
+							lastcapacityarray = firstcapacityarray;
+
+							k = kLast;
+						}else {
+							subvalidity = "yes";
 						// RETRIEVE ENTTRIES WITH SEQUENCE
 						// INSIDE XML
 						XPathUniprotPep XPather = new XPathUniprotPep();
 						String xpathQuery = "/uniprot/entry/sequence/text()";
 						// GET ENTRY THAT HAVE SEQUENCE NODELIST
-						NodeList getNodeListbyXPath = XPather
+						getNodeListbyXPath = XPather
 								.getNodeListByXPath(xpathQuery, xml);
 
 						if (getNodeListbyXPath.getLength() > 0) {
@@ -728,7 +763,7 @@ public class DB_Protease extends DB_Conn {
 							// RETRIEVE SEQUENCE IN SELECTED ENTRIES
 							XPathNodeUniprot XPathNoder2 = new XPathNodeUniprot();
 							String xpathQueryNode2 = "/uniprot/entry/sequence/text()";
-
+						
 							Loop l1 = new Loop();
 							int i = k;
 
@@ -769,10 +804,33 @@ public class DB_Protease extends DB_Conn {
 								firstcapacityarray[i].setPeptide(peptide);
 								System.out.println(pepsequence);
 							}
+							}else {
+								subvalidity = "no";
+								csvalidity = "no";
+								dispepvalidity = "no";
+								kFirst = k + 1;
+								kLast = kFirst;
+
+								firstcapacityarray = new ResultbySubstrateData[kFirst];
+								System.arraycopy(lastcapacityarray, 0, firstcapacityarray,
+										0, k);
+								firstcapacityarray[k] = new ResultbySubstrateData();
+								firstcapacityarray[k].setCSInput_end(pepEnd);
+								firstcapacityarray[k].setCSInput_start(pepStart);
+								firstcapacityarray[k].setCSInput_number(searchnumber);
+								firstcapacityarray[k].setCSInput_substrate(pepSubstrateId);
+								firstcapacityarray[k].setCsvalidity_1(csvalidity);
+								firstcapacityarray[k].setSubvalidity_1(subvalidity);
+								firstcapacityarray[k].setDispepvalidity_1(dispepvalidity);
+								firstcapacityarray[k].setNature("");							
+								lastcapacityarray = new ResultbySubstrateData[kLast];
+								lastcapacityarray = firstcapacityarray;
+
+								k = kLast;
+								
+							}
 						}
-
 					}
-
 					// clean up
 					result1.close();
 					ps.clearParameters();
@@ -785,7 +843,10 @@ public class DB_Protease extends DB_Conn {
 					ignore.printStackTrace();
 
 				}
-
+				
+				if (!(rsSize1 == 0) || (rsSize1==0 && !(getNodeListbyXPath.getLength() == 0))) {
+					
+				
 				// Retrieve PEPTIDE SEQUENCE IN UNIPROT
 				Document xml = checkSubUniprot(pepSubstrateId);
 
@@ -794,10 +855,10 @@ public class DB_Protease extends DB_Conn {
 				XPathUniprotPep XPather = new XPathUniprotPep();
 				String xpathQuery = "/uniprot/entry/sequence/text()";
 				// GET ENTRY THAT HAVE SEQUENCE NODELIST
-				NodeList getNodeListbyXPath = XPather.getNodeListByXPath(
+				NodeList getNodeListbyXPath2 = XPather.getNodeListByXPath(
 						xpathQuery, xml);
 
-				if (getNodeListbyXPath.getLength() > 0) {
+				if (getNodeListbyXPath2.getLength() > 0) {
 					System.out.println("OK");
 					// RETRIEVE SEQUENCE IN SELECTED ENTRIES
 					XPathNodeUniprot XPathNoder2 = new XPathNodeUniprot();
@@ -807,16 +868,18 @@ public class DB_Protease extends DB_Conn {
 
 					// FOR EACH SELECTED ENTRIE (THAT WILL BE ONLY
 					// ONE HERE BUT ANYWAY...)
-					for (int j1 = 0; j1 < getNodeListbyXPath.getLength(); j1++) {
+					for (int j1 = 0; j1 < getNodeListbyXPath2.getLength(); j1++) {
 
 						// GET SEQUENCE
 						NodeList getNodeListByXPathNoder2 = XPathNoder2
 								.getNodeListByXPath(xpathQueryNode2,
-										getNodeListbyXPath.item(j1));
+										getNodeListbyXPath2.item(j1));
 						LinkedList<String> stringfromNodelist2 = l1
 								.getStringfromNodelist(getNodeListByXPathNoder2);
 						fullsequence = stringfromNodelist2.getFirst();
 						fullsequence = fullsequence.replaceAll("\n", "");
+						pepsequence = fullsequence.substring(
+								pepStart - 1, pepEnd);
 						System.out.println(fullsequence);
 						nTerm = fullsequence.substring(pepStart - 4,
 								pepStart + 2);
@@ -1042,16 +1105,15 @@ public class DB_Protease extends DB_Conn {
 					String nOrC = "NTerm";
 					
 									
-					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
 					int rsSize = csjava.length;
 					System.out.println(rsSize + "apres");
 //
-					if (rsSize > 0) {
-						csvalidity = "yes";
+					if (rsSize > 0) {	
 						kIntN = rsSize + kFirst;
 						System.out.println(kFirst + "kFirst");
 						System.out.println(kIntN + "kInt");
-					} else {
+					} else {	
 						kIntN = kFirst;
 						System.out.println(kFirst + "kFirst");
 						System.out.println(kIntN + "kInt");
@@ -1085,16 +1147,15 @@ public class DB_Protease extends DB_Conn {
 					nOrC = "CTerm";
 					
 									
-					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
 					int rsSizeC = csjavaC.length;
 					System.out.println(rsSizeC + "apres");
 //
 					if (rsSizeC > 0) {
-						csvalidity = "yes";
 						kIntC = rsSizeC + kIntN;
 					} else {
-						kIntC = kIntN;
-						
+						csvalidity = "no";
+						kIntC = kIntN;	
 					}
 					// size the
 					// array
@@ -1111,9 +1172,16 @@ public class DB_Protease extends DB_Conn {
 						}
 					}
 					
+					if (rsSize==0 && rsSizeC ==0) {
+						csvalidity = "no";
+					} else {
+						csvalidity = "yes";
+					}
+					
 					lastcapacityarray = intermediatecapacityarrayCterm;
 					kLast = lastcapacityarray.length;
 					System.out.println(lastcapacityarray.length + "ROULEMENT DE TAMBOUR");
+					
 					
 				} else if (mismatch == 1) {
 					int gaps = 1;
@@ -1131,12 +1199,11 @@ public class DB_Protease extends DB_Conn {
 					String nOrC = "NTerm";
 					
 									
-					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
 					int rsSize = csjava.length;
 					System.out.println(rsSize + "apres");
 //
 					if (rsSize > 0) {
-						csvalidity = "yes";
 						kIntN = rsSize + kFirst;
 						System.out.println(kFirst + "kFirst");
 						System.out.println(kIntN + "kInt");
@@ -1174,12 +1241,11 @@ public class DB_Protease extends DB_Conn {
 					nOrC = "CTerm";
 					
 									
-					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
 					int rsSizeC = csjavaC.length;
 					System.out.println(rsSizeC + "apres");
 //
 					if (rsSizeC > 0) {
-						csvalidity = "yes";
 						kIntC = rsSizeC + kIntN;
 					} else {
 						kIntC = kIntN;
@@ -1200,6 +1266,11 @@ public class DB_Protease extends DB_Conn {
 						}
 					}
 					
+					if (rsSize==0 && rsSizeC ==0) {
+						csvalidity = "no";
+					} else {
+						csvalidity = "yes";
+					}
 					lastcapacityarray = intermediatecapacityarrayCterm;
 					kLast = lastcapacityarray.length;
 					System.out.println(lastcapacityarray.length + "ROULEMENT DE TAMBOUR");
@@ -1221,12 +1292,11 @@ public class DB_Protease extends DB_Conn {
 					String nOrC = "NTerm";
 					
 									
-					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
 					int rsSize = csjava.length;
 					System.out.println(rsSize + "apres");
 //
 					if (rsSize > 0) {
-						csvalidity = "yes";
 						kIntN = rsSize + kFirst;
 						System.out.println(kFirst + "kFirst");
 						System.out.println(kIntN + "kInt");
@@ -1264,12 +1334,11 @@ public class DB_Protease extends DB_Conn {
 					nOrC = "CTerm";
 					
 									
-					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
 					int rsSizeC = csjavaC.length;
 					System.out.println(rsSizeC + "apres");
 //
 					if (rsSizeC > 0) {
-						csvalidity = "yes";
 						kIntC = rsSizeC + kIntN;
 					} else {
 						kIntC = kIntN;
@@ -1290,6 +1359,11 @@ public class DB_Protease extends DB_Conn {
 						}
 					}
 					
+					if (rsSize==0 && rsSizeC ==0) {
+						csvalidity = "no";
+					} else {
+						csvalidity = "yes";
+					}
 					lastcapacityarray = intermediatecapacityarrayCterm;
 					kLast = lastcapacityarray.length;
 					System.out.println(lastcapacityarray.length + "ROULEMENT DE TAMBOUR");
@@ -1310,12 +1384,11 @@ public class DB_Protease extends DB_Conn {
 					String nOrC = "NTerm";
 					
 									
-					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
 					int rsSize = csjava.length;
 					System.out.println(rsSize + "apres");
 //
 					if (rsSize > 0) {
-						csvalidity = "yes";
 						kIntN = rsSize + kFirst;
 						System.out.println(kFirst + "kFirst");
 						System.out.println(kIntN + "kInt");
@@ -1353,12 +1426,11 @@ public class DB_Protease extends DB_Conn {
 					nOrC = "CTerm";
 					
 									
-					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC );
+					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
 					int rsSizeC = csjavaC.length;
 					System.out.println(rsSizeC + "apres");
 //
 					if (rsSizeC > 0) {
-						csvalidity = "yes";
 						kIntC = rsSizeC + kIntN;
 					} else {
 						kIntC = kIntN;
@@ -1378,65 +1450,25 @@ public class DB_Protease extends DB_Conn {
 							i++;
 						}
 					}
-					
+					if (rsSize==0 && rsSizeC ==0) {
+						csvalidity = "no";
+					} else {
+						csvalidity = "yes";
+					}
 					lastcapacityarray = intermediatecapacityarrayCterm;
 					kLast = lastcapacityarray.length;
 					System.out.println(lastcapacityarray.length + "ROULEMENT DE TAMBOUR");
 
-					
 				}
+				}
+				
+				lastcapacityarray[k].setCsvalidity_1(csvalidity);
+				lastcapacityarray[k].setSubvalidity_1(subvalidity);
+				lastcapacityarray[k].setDispepvalidity_1(dispepvalidity);
 				k = kLast;
 				
+				}
 				
-//			} else if (searchReq.getRequestnature().equalsIgnoreCase(
-//					"csRequest")) {
-//				String peptideuni = searchReq.getCsuniprot();
-//				int pepstart = searchReq.getCspepstart();
-//				int pepend = searchReq.getCspepend();
-//				System.out.println(peptideuni + "aaaaa");
-//				System.out.println(pepstart + "aaaa");
-//				System.out.println(pepend + "aaaaa");
-//				String fullsequence = null;
-//				String pepsequence = null;
-//
-//				// Retrieve PEPTIDE SEQUENCE IN UNIPROT
-//				Document xml = checkSubUniprot(peptideuni);
-//
-//				// RETRIEVE ENTTRIES WITH SEQUENCE
-//				// INSIDE XML
-//				XPathUniprotPep XPather = new XPathUniprotPep();
-//				String xpathQuery = "/uniprot/entry/sequence/text()";
-//				// GET ENTRY THAT HAVE SEQUENCE NODELIST
-//				NodeList getNodeListbyXPath = XPather.getNodeListByXPath(
-//						xpathQuery, xml);
-//
-//				if (getNodeListbyXPath.getLength() > 0) {
-//					System.out.println("OK");
-//					// RETRIEVE SEQUENCE IN SELECTED ENTRIES
-//					XPathNodeUniprot XPathNoder2 = new XPathNodeUniprot();
-//					String xpathQueryNode2 = "/uniprot/entry/sequence/text()";
-//
-//					Loop l1 = new Loop();
-//
-//					// FOR EACH SELECTED ENTRIE (THAT WILL BE ONLY
-//					// ONE HERE BUT ANYWAY...)
-//					for (int j1 = 0; j1 < getNodeListbyXPath.getLength(); j1++) {
-//
-//						// GET SEQUENCE
-//						NodeList getNodeListByXPathNoder2 = XPathNoder2
-//								.getNodeListByXPath(xpathQueryNode2,
-//										getNodeListbyXPath.item(j1));
-//						LinkedList<String> stringfromNodelist2 = l1
-//								.getStringfromNodelist(getNodeListByXPathNoder2);
-//						fullsequence = stringfromNodelist2.getFirst();
-//						fullsequence = fullsequence.replaceAll("\n", "");
-//					}
-//					System.out.println(fullsequence);
-//					pepsequence = fullsequence.substring(pepstart - 1, pepend);
-//					System.out.println(pepsequence);
-//				}
-			}
-
 		}
 
 		// return the array
@@ -1634,12 +1666,12 @@ public class DB_Protease extends DB_Conn {
 				+ ".xml";
 		System.out.println(UniprotURL + "bbbbb");
 		ParseUniprotPep parser = new ParseUniprotPep();
-		Document xml = parser.getXML(UniprotURL);
-		xml.getXmlVersion();
-		System.out.println(xml.getXmlVersion());
-		System.out.println(xml.toString());
+		Document xml = null;
 		String xmlstring = parser.getXMLasstring(UniprotURL);
+		xml = parser.getXML(UniprotURL);
+		xml.getXmlVersion();
 		return xml;
+		
 	}
 
 	private void populateCsSql(ResultbySubstrateData[] firstcapacityarray,
@@ -1674,6 +1706,7 @@ public class DB_Protease extends DB_Conn {
 	private void populateCsPERFECTSql(ResultbySubstrateData[] intermediatecapacityarray,
 			SubstrateData substrate, CsJava_1 csJava_1, int i, int j,
 			String substrateUni, int pepStart, int pepEnd, String pepNumber, int gaps) throws SQLException, Throwable {
+		PeptideData peptide = new PeptideData();
 		ProteaseData protease = new ProteaseData();
 		intermediatecapacityarray[i] = new ResultbySubstrateData();
 		intermediatecapacityarray[i].setSubstrate(substrate);
@@ -1682,11 +1715,12 @@ public class DB_Protease extends DB_Conn {
 		intermediatecapacityarray[i].setCSInput_end(pepEnd);
 		intermediatecapacityarray[i].setCSInput_number(pepNumber);
 		intermediatecapacityarray[i].CS_database = csJava_1.CleavageSite_Sequence;
-		
-		if (csJava_1.getCleavageSite_NorC().contains("CTerm")) {
+		peptide.sequence = csJava_1.pepsequence;
+		intermediatecapacityarray[i].setPeptide(peptide);
+		if (csJava_1.getCleavageSite_NorC().contains("C")) {
 			intermediatecapacityarray[i].CS_terminus = csJava_1.CleavageSite_onPeptide;
 			intermediatecapacityarray[i].CS_NorCterm = "CTerm";
-		} else if (csJava_1.getCleavageSite_NorC().contains("NTerm")) {
+		} else if (csJava_1.getCleavageSite_NorC().contains("N")) {
 			intermediatecapacityarray[i].CS_terminus = csJava_1.CleavageSite_onPeptide;
 			intermediatecapacityarray[i].CS_NorCterm = "NTerm";
 
