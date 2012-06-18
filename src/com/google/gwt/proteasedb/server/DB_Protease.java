@@ -153,7 +153,36 @@ public class DB_Protease extends DB_Conn {
 				csjava[i].CleavageSite_NorC = nOrC;
 				csjava[i].searchnumber = searchnumber;	
 				csjava[i].pepsequence = pepsequence;
+				int j = 0;
 				
+				String searchedsplit[] = terminus.split("");
+				String foundsplit[] = csjava[i].CleavageSite_Sequence.split("");
+				String one = null;
+				String two = null;
+				String three = null;
+				String four = null;
+				String five = null;
+				String six = null;
+				if (!searchedsplit[1].equals(foundsplit[1])) {
+					j++;
+				}
+				if (!searchedsplit[2].equals(foundsplit[2])) {
+					j++;
+				}
+				if (!searchedsplit[3].equals(foundsplit[3])) {
+					j++;
+				}
+				if (!searchedsplit[4].equals(foundsplit[4])) {
+					j++;
+				}
+				if (!searchedsplit[5].equals(foundsplit[5])) {
+					j++;
+				}
+				if (!searchedsplit[6].equals(foundsplit[6])) {
+					j++;
+				}
+				String mismatch = Integer.toString(j);
+				csjava[i].CleavageSite_mismatch = mismatch;
 				i++;
 			}
 
@@ -1715,6 +1744,7 @@ public class DB_Protease extends DB_Conn {
 		intermediatecapacityarray[i].setCSInput_end(pepEnd);
 		intermediatecapacityarray[i].setCSInput_number(pepNumber);
 		intermediatecapacityarray[i].CS_database = csJava_1.CleavageSite_Sequence;
+		intermediatecapacityarray[i].CS_mismatch = csJava_1.CleavageSite_mismatch;
 		peptide.sequence = csJava_1.pepsequence;
 		intermediatecapacityarray[i].setPeptide(peptide);
 		if (csJava_1.getCleavageSite_NorC().contains("C")) {

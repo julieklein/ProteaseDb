@@ -120,7 +120,7 @@ public class ResultbySubstrateData implements IsSerializable{
 	public String CSInput_number;
 	public int CSInput_start;
 	public int CSInput_end;
-	
+	public String CS_mismatch;
 	
 	public String getCleavageSite() {
 		return cleavageSite;
