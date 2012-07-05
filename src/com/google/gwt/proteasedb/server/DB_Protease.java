@@ -49,6 +49,7 @@ public class DB_Protease extends DB_Conn {
 		String substratesymbol = null;
 		String substrateuni = null;
 		String substratename = null;
+		String substratetaxon = null;
 		String output = null;
 
 		Connection connection = getConn();
@@ -64,10 +65,11 @@ public class DB_Protease extends DB_Conn {
 				substratesymbol = result.getString("S_Symbol");
 				substrateuni = result.getString("S_UniprotId");
 				substratename = result.getString("S_NL_Name");
+				substratetaxon = result.getString("S_Taxon");
 			}
 
 			output = Integer.toString(rsSize) + "\n" + substratesymbol + "\n"
-					+ substratename + "\n" + substrateuni;
+					+ substratename + "\n" + substrateuni + "\n" + substratetaxon;
 			System.out.println(output);
 			// clean up
 			result.close();
@@ -157,12 +159,7 @@ public class DB_Protease extends DB_Conn {
 				
 				String searchedsplit[] = terminus.split("");
 				String foundsplit[] = csjava[i].CleavageSite_Sequence.split("");
-				String one = null;
-				String two = null;
-				String three = null;
-				String four = null;
-				String five = null;
-				String six = null;
+				
 				if (!searchedsplit[1].equals(foundsplit[1])) {
 					j++;
 				}
@@ -182,6 +179,15 @@ public class DB_Protease extends DB_Conn {
 					j++;
 				}
 				String mismatch = Integer.toString(j);
+				if (result2.getString("S_UniprotID").equals(substrateuni)) {
+					mismatch = mismatch+" *";
+				}
+				if (result2.getString("S_UniprotID").equals(substrateuni) && (result2.getInt("P1prime") == pepstart)) {
+					mismatch = mismatch+", **";
+				}
+				if (result2.getString("S_UniprotID").equals(substrateuni) && (result2.getInt("P1") == pepend)) {
+					mismatch = mismatch+", **";
+				}
 				csjava[i].CleavageSite_mismatch = mismatch;
 				i++;
 			}
@@ -203,6 +209,7 @@ public class DB_Protease extends DB_Conn {
 		String proteasename = null;
 		String proteasesymbol = null;
 		String proteaseEc = null;
+		String proteasetaxon = null;
 
 		Connection connection3 = getConn();
 		PreparedStatement ps3 = connection3.prepareStatement(queryProtease);
@@ -214,8 +221,9 @@ public class DB_Protease extends DB_Conn {
 				proteasename = result3.getString("P_NL_Name");
 				proteasesymbol = result3.getString("P_Symbol");
 				proteaseEc = result3.getString("P_EC_Number");
+				proteasetaxon = result3.getString("P_Taxon");
 			}
-			output = proteasename + "\n" + proteasesymbol + "\n" + proteaseEc;
+			output = proteasename + "\n" + proteasesymbol + "\n" + proteaseEc + "\n" + proteasetaxon;
 			result3.close();
 			ps3.clearParameters();
 			ps3.close();
@@ -235,6 +243,7 @@ public class DB_Protease extends DB_Conn {
 
 		String substratename = null;
 		String substratesymbol = null;
+		String substratetaxon = null;
 		String output = null;
 
 		Connection connection3 = getConn();
@@ -246,9 +255,10 @@ public class DB_Protease extends DB_Conn {
 			while (result3.next()) {
 				substratename = result3.getString("S_NL_Name");
 				substratesymbol = result3.getString("S_Symbol");
+				substratetaxon = result3.getString("S_Taxon");
 
 			}
-			output = substratename + "\n" + substratesymbol;
+			output = substratename + "\n" + substratesymbol + "\n" + substratetaxon;
 			result3.close();
 			ps3.clearParameters();
 			ps3.close();
@@ -282,7 +292,9 @@ public class DB_Protease extends DB_Conn {
 			while (result5.next()) {
 				dispepjava[i] = new DisPepJava_1();
 				dispepjava[i].PMID = result5.getString("PMID");
+				dispepjava[i].expeDescription = result5.getString("Description");
 				dispepjava[i].Pd_Disease = result5.getString("Pd_Disease");
+				dispepjava[i].Pd_Anatomy = result5.getString("Pd_Anatomy");
 				dispepjava[i].Pd_Sequence = result5.getString("Pd_Sequence");
 				dispepjava[i].Pd_Regulation = result5
 						.getString("Pd_Regulation");
@@ -309,6 +321,7 @@ public class DB_Protease extends DB_Conn {
 		String substratesymbol = null;
 		String substrateuni = null;
 		String substratename = null;
+		String substratetaxon = null;
 		
 		int kFirst = 0;
 		int kInter = 0;
@@ -333,7 +346,7 @@ public class DB_Protease extends DB_Conn {
 				String strupepvalidity = null;
 
 				// CHECK SUBSTRATE IN SQL
-				String querySubstrate = "SELECT * FROM SUBSTRATE WHERE S_Symbol = ? OR S_UniprotId = ?";
+				String querySubstrate = "SELECT * FROM SUBSTRATE WHERE S_Symbol = ? AND S_Taxon = 'Human' OR S_UniprotId = ? AND S_Taxon = 'Human' ";
 				String proteinrequest = searchReq.getProteininputsymbol();
 
 				String output = getSubstrateSQL(querySubstrate, proteinrequest);
@@ -344,6 +357,7 @@ public class DB_Protease extends DB_Conn {
 				substratesymbol = splitoutput[1];
 				substratename = splitoutput[2];
 				substrateuni = splitoutput[3];
+				substratetaxon = splitoutput[4];
 
 				SubstrateData substrate = new SubstrateData();
 
@@ -386,6 +400,7 @@ public class DB_Protease extends DB_Conn {
 					substrate.S_NL_Name = substratename;
 					substrate.S_Symbol = substratesymbol;
 					substrate.S_Uniprotid = substrateuni;
+					substrate.S_Taxon = substratetaxon;
 					System.out.println(substrateuni);
 
 					// CHECK CS IN SQL
@@ -452,7 +467,7 @@ public class DB_Protease extends DB_Conn {
 
 							for (int j = 0; j < disepjava.length; j++) {
 								populateDisPepSql(substratesymbol,
-										substrateuni,
+										substrateuni, substratetaxon,
 										intermediatecapacityarray, i, j,
 										disepjava[j]);
 								i++;
@@ -482,7 +497,7 @@ public class DB_Protease extends DB_Conn {
 									// RETRIEVE ALL PEPTIDES IN SELECTED ENTRIES
 									lastcapacityarray = populateStruPepUni(
 											substratesymbol, substrateuni,
-											substratename,
+											substratename, substratetaxon,
 											intermediatecapacityarray,
 											lastcapacityarray, kInter,
 											getNodeListbyXPath);
@@ -515,7 +530,7 @@ public class DB_Protease extends DB_Conn {
 									// RETRIEVE ALL PEPTIDES IN SELECTED ENTRIES
 									lastcapacityarray = populateStruPepUni(
 											substratesymbol, substrateuni,
-											substratename,
+											substratename, substratetaxon,
 											intermediatecapacityarray,
 											lastcapacityarray, kInter,
 											getNodeListbyXPath);
@@ -556,7 +571,7 @@ public class DB_Protease extends DB_Conn {
 							int i = kFirst;
 							for (int j = 0; j < disepjava.length; j++) {
 								populateDisPepSql(substratesymbol,
-										substrateuni,
+										substrateuni, substratetaxon,
 										intermediatecapacityarray, i, j,
 										disepjava[j]);
 								i++;
@@ -587,7 +602,7 @@ public class DB_Protease extends DB_Conn {
 									// ENTRIES
 									lastcapacityarray = populateStruPepUni(
 											substratesymbol, substrateuni,
-											substratename,
+											substratename, substratetaxon,
 											intermediatecapacityarray,
 											lastcapacityarray, kInter,
 											getNodeListbyXPath);
@@ -622,7 +637,7 @@ public class DB_Protease extends DB_Conn {
 									// ENTRIES
 									lastcapacityarray = populateStruPepUni(
 											substratesymbol, substrateuni,
-											substratename,
+											substratename, substratetaxon,
 											intermediatecapacityarray,
 											lastcapacityarray, kInter,
 											getNodeListbyXPath);
@@ -734,11 +749,14 @@ public class DB_Protease extends DB_Conn {
 							System.out.println(disease);
 							peptide.regulation = result1
 									.getString("Pd_Regulation");
+							peptide.anatomy = result1
+									.getString("Pd_Anatomy");
 							// peptide.structure = "";
 							peptide.start = result1.getInt("Pd_Start");
 							peptide.end = result1.getInt("Pd_End");
 							firstcapacityarray[i].setPeptide(peptide);
 							firstcapacityarray[i].setPmid(result1.getString("Pmid"));
+							firstcapacityarray[i].setExpDescription(result1.getString("Description"));
 							firstcapacityarray[i].setNature("peptide");
 							firstcapacityarray[i].setEntryValidity("xxxxx");
 							firstcapacityarray[i].setCSInput_substrate(pepSubstrateId);
@@ -809,6 +827,7 @@ public class DB_Protease extends DB_Conn {
 								substrate1.S_NL_Name = outputsubstratesplit[0];
 								substrate1.S_Uniprotid = searchReq.peptideinputuni;
 								substrate1.S_Symbol = outputsubstratesplit[1];
+								substrate1.S_Taxon = outputsubstratesplit[2];
 								firstcapacityarray[i] = new ResultbySubstrateData();
 								firstcapacityarray[i].setSubstrate(substrate1);
 								PeptideData peptide = new PeptideData();
@@ -1506,7 +1525,7 @@ public class DB_Protease extends DB_Conn {
 	}
 
 	private ResultbySubstrateData[] populateStruPepUni(String substratesymbol,
-			String substrateuni, String substratename,
+			String substrateuni, String substratename, String substratetaxon,
 			ResultbySubstrateData[] intermediatecapacityarray,
 			ResultbySubstrateData[] lastcapacityarray, int kInter,
 			NodeList getNodeListbyXPath) {
@@ -1567,6 +1586,8 @@ public class DB_Protease extends DB_Conn {
 				substrate2.S_NL_Name = substratename;
 				substrate2.S_Symbol = substratesymbol;
 				substrate2.S_Uniprotid = substrateuni;
+				substrate2.S_Taxon = substratetaxon;
+				
 				lastcapacityarray[i].setSubstrate(substrate2);
 				lastcapacityarray[i].pmid = "";
 				lastcapacityarray[i].externallink = "http://www.uniprot.org/uniprot/"
@@ -1728,6 +1749,7 @@ public class DB_Protease extends DB_Conn {
 		protease.P_NL_Name = splitouputprotease[0];
 		protease.P_Symbol = splitouputprotease[1];
 		protease.P_Ecnumber = splitouputprotease[2];
+		protease.P_Taxon = splitouputprotease[3];
 		firstcapacityarray[i].setProtease(protease);
 
 	}
@@ -1773,20 +1795,23 @@ public class DB_Protease extends DB_Conn {
 		protease.P_NL_Name = splitouputprotease[0];
 		protease.P_Symbol = splitouputprotease[1];
 		protease.P_Ecnumber = splitouputprotease[2];
+		protease.P_Taxon = splitouputprotease[3];
 		intermediatecapacityarray[i].setProtease(protease);
 
 	}
 
-	private void populateDisPepSql(String substratesymbol, String substrateuni,
+	private void populateDisPepSql(String substratesymbol, String substrateuni, String substratetaxon,
 			ResultbySubstrateData[] intermediatecapacityarray, int i, int j,
 			DisPepJava_1 dispepjava) throws SQLException {
 		intermediatecapacityarray[i] = new ResultbySubstrateData();
 		SubstrateData substrate2 = new SubstrateData();
 		substrate2.S_Symbol = substratesymbol;
 		substrate2.S_Uniprotid = substrateuni;
+		substrate2.S_Taxon = substratetaxon;
 		intermediatecapacityarray[i].setSubstrate(substrate2);
 		intermediatecapacityarray[i].setDispepvalidity_1("yes");
 		intermediatecapacityarray[i].pmid = dispepjava.PMID;
+		intermediatecapacityarray[i].expDescription = dispepjava.expeDescription;
 
 		intermediatecapacityarray[i].externallink = "";
 		PeptideData peptide = new PeptideData();
@@ -1795,6 +1820,7 @@ public class DB_Protease extends DB_Conn {
 		peptide.sequence = dispepjava.Pd_Sequence;
 		System.out.println(disease);
 		peptide.regulation = dispepjava.Pd_Regulation;
+		peptide.anatomy = dispepjava.Pd_Anatomy;
 		// peptide.structure = "";
 		peptide.start = dispepjava.Pd_Start;
 		peptide.end = dispepjava.Pd_End;

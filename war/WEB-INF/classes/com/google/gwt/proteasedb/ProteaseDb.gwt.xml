@@ -2,6 +2,8 @@
 
 	<!-- Inherit the core Web Toolkit stuff. -->
 	<inherits name='com.google.gwt.user.User' />
+	<source path = "client"/>
+	<public path= "public"/>
 
 	<!-- Specify the app entry point class. -->
 
@@ -9,6 +11,7 @@
 		init inside java class -->
 	<!-- Tomcat will listen for this from the server and waits for rpc request 
 		in this context -->
+		
 	<servlet class="com.google.gwt.proteasedb.server.MySQLConnection"
 		path="/MySQLConnection" />
 

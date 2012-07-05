@@ -59,7 +59,16 @@ public class ResultbySubstrateData implements IsSerializable{
 	public String dispepvalidity_1;
 	public String strupepvalidity_1;
 	public String subvalidity_1;
-	
+	public String expDescription;
+	public String getExpDescription() {
+		return expDescription;
+	}
+
+
+	public void setExpDescription(String expDescription) {
+		this.expDescription = expDescription;
+	}
+
 	public String CS_pattern;
 	public String CS_database;
 	public String CS_substrate;

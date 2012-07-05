@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app>
 <servlet>
-  <servlet-name>mySQLConnection</servlet-name>
+  <servlet-name>MySQLConnection</servlet-name>
   <servlet-class>com.google.gwt.proteasedb.server.MySQLConnection</servlet-class>
 </servlet>
 <servlet-mapping>
-  <servlet-name>mySQLConnection</servlet-name>
+  <servlet-name>MySQLConnection</servlet-name>
   <url-pattern>/com.google.gwt.proteasedb.ProteaseDb/MySQLConnection</url-pattern>
 </servlet-mapping>
 </web-app>

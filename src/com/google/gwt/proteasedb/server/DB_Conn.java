@@ -28,7 +28,7 @@ public class DB_Conn {
 	 
 		 try {
 		        String host = "jdbc:mysql://localhost:3306/";
-		        String dbName = "GWTmySQL";
+		        String dbName = "Proteasix";
 		        String usermame = "root";
 		        String pwd = "kschoicesql";
 		        conn = DriverManager.getConnection(host + dbName + "?user=" + usermame +"&password=" + pwd);

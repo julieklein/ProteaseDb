@@ -202,11 +202,11 @@ color:#4A4A4A;
 }
 
 .gwt-TabBarItem {
-    -moz-border-radius: 10px 10px 0px 0px;
-    -webkit-border-radius: 10px 10px 0px 0px;
+    -moz-border-radius: 10px 10px 0px 0px !important ;
+    -webkit-border-radius: 10px 10px 0px 0px !important ;
     padding: 5px;
     background-color: #ebebeb !important ;
-    background: -webkit-gradient(linear, left bottom, left top, color-stop(0, #999999),color-stop(1, #ffffff));
+    background: -webkit-gradient(linear, left bottom, left top, color-stop(0, #999999),color-stop(1, #ffffff)) !important ;
 }
 
 .gwt-TabBarItem-selected {
@@ -224,7 +224,7 @@ color:#4A4A4A;
 .gwt-DecoratedTabBar .gwt-TabBarRest {
 }
 .gwt-DecoratedTabBar .gwt-TabBarItem {
-  border-collapse: collapse;
+  border-collapse: collapse !important ;
   margin-left: 6px;
 }
 .gwt-DecoratedTabBar .tabTopCenter {

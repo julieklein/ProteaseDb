@@ -16,9 +16,11 @@ public class ProteaseData implements IsSerializable{
 	
 	//fields to store data
 	public String P_NL_Name;
+
 	public String P_Symbol;
 	public String P_Uniprotid;
 	public String P_Ecnumber;
+	public String P_Taxon;
 	
 	/**
      * constructor

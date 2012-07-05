@@ -18,6 +18,7 @@ public class SubstrateData implements IsSerializable{
 	public String S_NL_Name;
 	public String S_Symbol;
 	public String S_Uniprotid;
+	public String S_Taxon;
 	
 	
 	/**
