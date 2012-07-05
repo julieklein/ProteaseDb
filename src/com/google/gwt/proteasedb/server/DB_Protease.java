@@ -183,10 +183,10 @@ public class DB_Protease extends DB_Conn {
 					mismatch = mismatch+" *";
 				}
 				if (result2.getString("S_UniprotID").equals(substrateuni) && (result2.getInt("P1prime") == pepstart)) {
-					mismatch = mismatch+", **";
+					mismatch = mismatch+",**";
 				}
 				if (result2.getString("S_UniprotID").equals(substrateuni) && (result2.getInt("P1") == pepend)) {
-					mismatch = mismatch+", **";
+					mismatch = mismatch+",**";
 				}
 				csjava[i].CleavageSite_mismatch = mismatch;
 				i++;
@@ -739,6 +739,7 @@ public class DB_Protease extends DB_Conn {
 							substrate1.S_NL_Name = outputsubstratesplit[0];
 							substrate1.S_Uniprotid = substrateuni;
 							substrate1.S_Symbol = substratesymbol;
+							substrate1.S_Taxon = outputsubstratesplit[2];
 							firstcapacityarray[i] = new ResultbySubstrateData();
 							firstcapacityarray[i].setSubstrate(substrate1);
 							PeptideData peptide = new PeptideData();

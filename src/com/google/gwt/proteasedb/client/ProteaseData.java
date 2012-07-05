@@ -20,6 +20,14 @@ public class ProteaseData implements IsSerializable{
 	public String P_Symbol;
 	public String P_Uniprotid;
 	public String P_Ecnumber;
+	public String getP_Taxon() {
+		return P_Taxon;
+	}
+
+	public void setP_Taxon(String p_Taxon) {
+		P_Taxon = p_Taxon;
+	}
+
 	public String P_Taxon;
 	
 	/**
