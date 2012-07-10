@@ -143,11 +143,11 @@ public class DB_Protease extends DB_Conn {
 			csjava = new CsJava_1[rsSize2];
 			while (result2.next()) {
 				csjava[i] = new CsJava_1();
-				csjava[i].CleavageSite_Sequence = result2
+				String cleavageSite_Sequence = result2
 						.getString("CleavageSite_Sequence");
 				csjava[i].P1 = result2.getInt("P1");
 				csjava[i].P1prime = result2.getInt("P1prime");
-				csjava[i].substratesymbol = result2.getString("S_Symbol");
+				csjava[i].CleavageSite_substratesymbol = result2.getString("S_Symbol");
 				csjava[i].External_link = result2.getString("External_link");
 				csjava[i].PMID = result2.getString("PMID");
 				csjava[i].P_UniprotId = result2.getString("P_UniprotId");
@@ -158,7 +158,7 @@ public class DB_Protease extends DB_Conn {
 				int j = 0;
 				
 				String searchedsplit[] = terminus.split("");
-				String foundsplit[] = csjava[i].CleavageSite_Sequence.split("");
+				String foundsplit[] = cleavageSite_Sequence.split("");
 				
 				if (!searchedsplit[1].equals(foundsplit[1])) {
 					j++;
@@ -180,15 +180,16 @@ public class DB_Protease extends DB_Conn {
 				}
 				String mismatch = Integer.toString(j);
 				if (result2.getString("S_UniprotID").equals(substrateuni)) {
-					mismatch = mismatch+" *";
+					mismatch = mismatch +" *";
 				}
 				if (result2.getString("S_UniprotID").equals(substrateuni) && (result2.getInt("P1prime") == pepstart)) {
-					mismatch = mismatch+",**";
+					mismatch = mismatch +",**";
 				}
 				if (result2.getString("S_UniprotID").equals(substrateuni) && (result2.getInt("P1") == pepend)) {
-					mismatch = mismatch+",**";
+					mismatch = mismatch +",**";
 				}
 				csjava[i].CleavageSite_mismatch = mismatch;
+				csjava[i].CleavageSite_Sequence = cleavageSite_Sequence;
 				i++;
 			}
 
@@ -748,8 +749,10 @@ public class DB_Protease extends DB_Conn {
 							String disease = result1.getString("Pd_Disease");
 							peptide.disease = disease;
 							System.out.println(disease);
-							peptide.regulation = result1
+							String regulation = result1
 									.getString("Pd_Regulation");
+							peptide.regulation = regulation ;
+							System.out.println(regulation);
 							peptide.anatomy = result1
 									.getString("Pd_Anatomy");
 							// peptide.structure = "";
@@ -930,9 +933,25 @@ public class DB_Protease extends DB_Conn {
 						pepsequence = fullsequence.substring(
 								pepStart - 1, pepEnd);
 						System.out.println(fullsequence);
+						if (!(pepStart - 4 < 0) && !(pepEnd + 3 > fullsequence.length())){
 						nTerm = fullsequence.substring(pepStart - 4,
 								pepStart + 2);
 						cTerm = fullsequence.substring(pepEnd - 3, pepEnd + 3);
+						} else if (!(pepStart - 4 < 0) && (pepEnd + 3 > fullsequence.length())) {
+							nTerm = fullsequence.substring(pepStart - 4,
+									pepStart + 2);
+							cTerm = fullsequence.substring(pepEnd - 3, pepEnd);
+							for (int i = pepEnd; i< pepEnd + 3; i++ ) {
+								cTerm = cTerm + "-";
+							}
+						} else if ((pepStart - 4 < 0) && !(pepEnd + 3 > fullsequence.length())) {
+							cTerm = fullsequence.substring(pepEnd - 3, pepEnd + 3);
+							nTerm = fullsequence.substring(pepStart,
+									pepStart + 2);
+							for (int i = pepStart-4; i< pepStart; i++ ) {
+								nTerm = "-" + nTerm;
+							}
+						}
 						System.out.println(nTerm);
 						System.out.println(cTerm);
 					}
@@ -1767,6 +1786,7 @@ public class DB_Protease extends DB_Conn {
 		intermediatecapacityarray[i].setCSInput_end(pepEnd);
 		intermediatecapacityarray[i].setCSInput_number(pepNumber);
 		intermediatecapacityarray[i].CS_database = csJava_1.CleavageSite_Sequence;
+		intermediatecapacityarray[i].CS_databasesubstrate = csJava_1.CleavageSite_substratesymbol;
 		intermediatecapacityarray[i].CS_mismatch = csJava_1.CleavageSite_mismatch;
 		peptide.sequence = csJava_1.pepsequence;
 		intermediatecapacityarray[i].setPeptide(peptide);
@@ -1820,7 +1840,9 @@ public class DB_Protease extends DB_Conn {
 		peptide.disease = disease;
 		peptide.sequence = dispepjava.Pd_Sequence;
 		System.out.println(disease);
-		peptide.regulation = dispepjava.Pd_Regulation;
+		String regulation = dispepjava.Pd_Regulation;
+		peptide.regulation = regulation;
+		System.out.println("XXXX");
 		peptide.anatomy = dispepjava.Pd_Anatomy;
 		// peptide.structure = "";
 		peptide.start = dispepjava.Pd_Start;

@@ -124,7 +124,7 @@ public class ResultbySubstrateData implements IsSerializable{
 
 	public String CS_terminus;
 	public String CS_NorCterm;
-	
+	public String CS_databasesubstrate;
 	public String CSInput_substrate; 
 	public String CSInput_number;
 	public int CSInput_start;

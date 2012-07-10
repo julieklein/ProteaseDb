@@ -353,11 +353,11 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			public void onClick(ClickEvent event) {
 				// keep search to setup prepared statement
 				// init rpc
-				searchBoxId_2.setText("P*1\nP*2\nP*3");
-				searchBoxUni_2.setText("P02461\nP02461\nP61769");
-				searchBoxStartEnd_2.setText("176-198\n230-249\n59-81");
+				searchBoxId_2.setText("P*1\nP*2\nP*3\nP*4");
+				searchBoxUni_2.setText("P02461\nP02452\nP61769\nP01009");
+				searchBoxStartEnd_2.setText("176-198\n588-624\n59-81\n32-45");
 				searchBoxSequence_2.setText("");
-				listcs_2.setItemSelected(2, true);
+				listcs_2.setItemSelected(1, true);
 				listspecies_2.setItemSelected(3, true);
 			}
 		});
@@ -1867,8 +1867,9 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			String key = resultcs_2[i].CSInput_number
 					+ resultcs_2[i].substrate.S_Symbol
 					// + resultcs_2[i].CS_terminus
-					+ resultcs_2[i].CS_database
-					+ resultcs_2[i].protease.P_Symbol + resultcs_2[i].protease.P_Taxon + resultcs_2[i].CS_mismatch;
+					+ resultcs_2[i].CS_terminus
+					+ resultcs_2[i].protease.P_Symbol.toUpperCase() + resultcs_2[i].CS_mismatch.toString().charAt(0);
+			if (!(resultcs_2[i].CS_database.equals("------"))) {
 			if (!hmap.containsKey(key)) {
 				List value = new ArrayList<Set<String>>();
 				for (int j = 0; j < 13; j++) {
@@ -1881,16 +1882,20 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			hmap.get(key).get(2).add(resultcs_2[i].substrate.S_Symbol);
 			hmap.get(key).get(3).add(resultcs_2[i].peptide.sequence);
 			hmap.get(key).get(4).add(resultcs_2[i].CS_terminus);
-			hmap.get(key).get(5).add(resultcs_2[i].CS_database);
-			hmap.get(key).get(6).add(resultcs_2[i].CS_mismatch);
-			hmap.get(key).get(7).add(resultcs_2[i].protease.P_Symbol);
+			hmap.get(key).get(5).add(resultcs_2[i].CS_database + resultcs_2[i].CS_databasesubstrate);
+			String mismatch = resultcs_2[i].CS_mismatch.toString();
+			mismatch = mismatch.replaceAll("\\*", "");
+			mismatch = mismatch.replaceAll(" ", "");
+			mismatch = mismatch.replaceAll(",", "");
+			hmap.get(key).get(6).add(mismatch);
+			hmap.get(key).get(7).add(resultcs_2[i].protease.P_Symbol.toUpperCase());
 			hmap.get(key).get(8).add(resultcs_2[i].externallink);
 			hmap.get(key).get(9).add(resultcs_2[i].pmid);
 			hmap.get(key).get(12).add(resultcs_2[i].protease.P_Uniprotid);
 			hmap.get(key).get(10).add(resultcs_2[i].substrate.S_Taxon);
 			hmap.get(key).get(11).add(resultcs_2[i].protease.P_Taxon);
 		}
-
+		}
 		Iterator iterator = hmap.values().iterator();
 		int numbercsSHORT_2 = hmap.size();
 		ResultbySubstrateData[] resultcsSHORT_2 = new ResultbySubstrateData[numbercsSHORT_2];
@@ -1982,9 +1987,14 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
-				String sequence = "<p align=\"left\"><font size=\"1\">"
-						+ resultbySubstrateData.peptide.sequence.toUpperCase()
+				String sequence = resultbySubstrateData.peptide.sequence;
+				sequence = sequence.replaceAll("Ph",
+						"P");
+						
+				sequence =	"<p align=\"left\"><font size=\"1\">"
+						+ sequence.toUpperCase()
 						+ "</font></p>";
+	
 				return new SafeHtmlBuilder().appendHtmlConstant(sequence)
 						.toSafeHtml();
 			}
@@ -2089,7 +2099,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		CellTable.Resources ptableresources = GWT.create(PTableResources.class);
 		CellTable<ResultbySubstrateData> dispepTable = new CellTable<ResultbySubstrateData>(
 				rowsdispep, ptableresources);
-		dispepTable.setWidth("1200px");
+		dispepTable.setWidth("1300px");
 
 		// Create columns
 
@@ -2204,6 +2214,8 @@ public class ProteasiXEntryPoint implements EntryPoint {
 							+ resultbySubstrateData.peptide.regulation;
 				} else if (resultbySubstrateData.peptide.regulation.equals("")) {
 					regulation = "n.d.";
+				} else if (resultbySubstrateData.peptide.regulation.equals("n.d.")) {
+					regulation = "n.d.";
 				}
 				return new SafeHtmlBuilder().appendHtmlConstant(regulation)
 						.toSafeHtml();
@@ -2225,13 +2237,13 @@ public class ProteasiXEntryPoint implements EntryPoint {
 					for (String string : valuesplit) {
 						valuesplit[i].trim();
 						pmid = pmid
-								+ "; "
+								+ " "
 								+ "<a href=\"http://www.ncbi.nlm.nih.gov/pubmed/"
 								+ valuesplit[i] + "\"target=\"_blank\">"
 								+ valuesplit[i] + "</a>";
 						i++;
 					}
-					pmid = pmid.replaceFirst("; ", "");
+					pmid = pmid.replaceFirst(" ", "");
 				} else {
 					pmid = "<a href=\"http://www.ncbi.nlm.nih.gov/pubmed/"
 							+ external + "\"target=\"_blank\">" + description
@@ -2271,11 +2283,11 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		dispepTable.setColumnWidth(substrateSpecies, 5, Unit.PCT);
 		dispepTable.setColumnWidth(startCol, 5, Unit.PCT);
 		dispepTable.setColumnWidth(endCol, 5, Unit.PCT);
-		dispepTable.setColumnWidth(sequenceCol, 31, Unit.PCT);
-		dispepTable.setColumnWidth(diseaseCol, 12, Unit.PCT);
+		dispepTable.setColumnWidth(sequenceCol, 26, Unit.PCT);
+		dispepTable.setColumnWidth(diseaseCol, 15, Unit.PCT);
 		dispepTable.setColumnWidth(anatomyCol, 8, Unit.PCT);
 		dispepTable.setColumnWidth(regulationCol, 8, Unit.PCT);
-		dispepTable.setColumnWidth(pmidCol, 11, Unit.PCT);
+		dispepTable.setColumnWidth(pmidCol, 13, Unit.PCT);
 
 		peptide_pep_2.add(dispepTable);
 
@@ -2480,7 +2492,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		CellTable.Resources ptableresources = GWT.create(PTableResources.class);
 		CellTable<ResultbySubstrateData> csTable = new CellTable<ResultbySubstrateData>(
 				rowscs, ptableresources);
-		csTable.setWidth("1200px");
+		csTable.setWidth("1300px");
 
 		// Create columns
 
@@ -2522,23 +2534,47 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			@Override
 			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
 				String sequence = null;
+				if (resultbySubstrateData.peptide.sequence.length() > 16) {			
 				if (resultbySubstrateData.CS_NorCterm.contains("N")) {
-					sequence = "<p align=\"left\"><font size=\"1\"><font color= #82a38d><u>"
+					sequence = "<p><font size=\"1\"><font color= #82a38d><u>"
 							+ resultbySubstrateData.peptide.sequence.substring(
 									0, 3)
 							+ "</u></font>"
 							+ resultbySubstrateData.peptide.sequence
-									.substring(3) + "</font></p>";
+									.substring(3, 8) +"[...]" + resultbySubstrateData.peptide.sequence
+									.substring(resultbySubstrateData.peptide.sequence.length()-8) + "</font></p>";
 				}
 				if (resultbySubstrateData.CS_NorCterm.contains("C")) {
 					int length = resultbySubstrateData.peptide.sequence
 							.length();
-					sequence = "<p align=\"left\"><font size=\"1\">"
+					sequence = "<p><font size=\"1\">"
 							+ resultbySubstrateData.peptide.sequence.substring(
-									0, length - 3)
+									0, 8) + "[...]" + resultbySubstrateData.peptide.sequence
+									.substring(length - 8, length - 3)
 							+ "<font color= #82a38d><u>"
 							+ resultbySubstrateData.peptide.sequence
 									.substring(length - 3) + "</u></font></font></p>";
+				}
+				} else {
+					if (resultbySubstrateData.CS_NorCterm.contains("N")) {
+						sequence = "<p><font size=\"1\"><font color= #82a38d><u>"
+								+ resultbySubstrateData.peptide.sequence.substring(
+										0, 3)
+								+ "</u></font>"
+								+ resultbySubstrateData.peptide.sequence
+										.substring(3) + "</font></p>";
+					}
+					if (resultbySubstrateData.CS_NorCterm.contains("C")) {
+						int length = resultbySubstrateData.peptide.sequence
+								.length();
+						sequence = "<p><font size=\"1\">"
+								+ resultbySubstrateData.peptide.sequence.substring(
+										0, length - 3)
+								+ "<font color= #82a38d><u>"
+								+ resultbySubstrateData.peptide.sequence
+										.substring(length - 3) + "</u></font></font></p>";
+					}
+					
 				}
 				return new SafeHtmlBuilder().appendHtmlConstant(sequence)
 						.toSafeHtml();
@@ -2572,8 +2608,11 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
+				String splitmultiple[] = resultbySubstrateData.CS_database.split(", ");
+				String output = "";
+				for (int i = 0; i< splitmultiple.length; i++) {	
 				String searched = resultbySubstrateData.CS_terminus;
-				String found = resultbySubstrateData.CS_database;
+				String found = splitmultiple[i];
 				String searchedsplit[] = searched.split("");
 				String foundsplit[] = found.split("");
 				String one = null;
@@ -2612,9 +2651,19 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				} else {
 					six = foundsplit[6].toLowerCase();
 				}
-				return new SafeHtmlBuilder().appendHtmlConstant(
-						"<p>" + one + two + three + "" + "\u00A6" + four + five
-								+ six + "</p>").toSafeHtml();
+				String substrate = "";
+				for (int j = 7; j < foundsplit.length; j++) {
+					substrate = substrate + foundsplit[j];
+				}
+				if (substrate.equalsIgnoreCase(resultbySubstrateData.substrate.S_Symbol)) {
+					substrate = "<u>" + substrate + "</u>";
+				}
+				 output = output + " " + "<p>" + one + two + three + "" + "\u00A6" + four + five
+							+ six + " ("+ substrate + ")" + "</p>";
+				
+				}
+				return new SafeHtmlBuilder().appendHtmlConstant(output
+						).toSafeHtml();
 
 			}
 
@@ -2624,7 +2673,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
-				String symbol = resultbySubstrateData.protease.P_Symbol;
+				String symbol = resultbySubstrateData.protease.P_Symbol.toUpperCase();
 				return new SafeHtmlBuilder().appendHtmlConstant(
 						"<a href=\"http://www.uniprot.org/uniprot/"
 								+ resultbySubstrateData.protease.P_Uniprotid
@@ -2639,6 +2688,10 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			@Override
 			public String getValue(ResultbySubstrateData resultbySubstrateData) {
 				String species = resultbySubstrateData.protease.P_Taxon;
+				species = species.replaceAll("Human", "H");
+				species = species.replaceAll("Mouse", "M");
+				species = species.replaceAll("Rat", "R");
+				
 				return species;
 			}
 		};
@@ -2723,13 +2776,13 @@ public class ProteasiXEntryPoint implements EntryPoint {
 						for (String string : valuesplit) {
 							valuesplit[i].trim();
 							pmid = pmid
-									+ "; "
+									+ " "
 									+ "<p><font size=\"1\"><a href=\"http://www.ncbi.nlm.nih.gov/pubmed/"
 									+ valuesplit[i] + "\"target=\"_blank\">"
 									+ valuesplit[i] + "</a></font></p>";
 							i++;
 						}
-						pmid = pmid.replaceFirst("; ", "");
+						pmid = pmid.replaceFirst(" ", "");
 
 					} else {
 						pmid = "<p><font size=\"1\"><a href=\"http://www.ncbi.nlm.nih.gov/pubmed/"
@@ -2767,9 +2820,9 @@ public class ProteasiXEntryPoint implements EntryPoint {
 
 		csTable.setColumnWidth(inputNumberCol, 10, Unit.EM);
 		csTable.setColumnWidth(substrateCol, 5, Unit.EM);
-		csTable.setColumnWidth(sequenceCol, 20, Unit.EM);
+		csTable.setColumnWidth(sequenceCol, 10, Unit.EM);
 		csTable.setColumnWidth(searchedCSCol, 10, Unit.EM);
-		csTable.setColumnWidth(foundCSCol, 5, Unit.EM);
+		csTable.setColumnWidth(foundCSCol, 15, Unit.EM);
 		csTable.setColumnWidth(proteaseCol, 5, Unit.EM);
 		csTable.setColumnWidth(extlinkCol, 5, Unit.EM);
 		csTable.setColumnWidth(pmidCol, 5, Unit.EM);
