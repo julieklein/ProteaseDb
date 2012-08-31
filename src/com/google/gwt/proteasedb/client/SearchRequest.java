@@ -48,6 +48,24 @@ public void setPeptideinputend(int peptideinputend) {
 public String csuniprot;
 public int cspepstart;
 public int cspepend;
+public String CS_proteasespecies;
+public String CS_substratespecies;
+
+public String getCS_proteasespecies() {
+	return CS_proteasespecies;
+}
+
+public void setCS_proteasespecies(String cS_proteasespecies) {
+	CS_proteasespecies = cS_proteasespecies;
+}
+
+public String getCS_substratespecies() {
+	return CS_substratespecies;
+}
+
+public void setCS_substratespecies(String cS_substratespecies) {
+	CS_substratespecies = cS_substratespecies;
+}
 
 public String getCsuniprot() {
 	return csuniprot;

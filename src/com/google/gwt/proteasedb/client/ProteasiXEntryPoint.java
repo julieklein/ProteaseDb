@@ -1,8 +1,15 @@
 package com.google.gwt.proteasedb.client;
 
+
 import com.google.gwt.cell.client.NumberCell;
 import com.google.gwt.cell.client.SafeHtmlCell;
 import com.google.gwt.core.client.EntryPoint;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -16,6 +23,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import java_cup.parse_action;
 
@@ -133,7 +142,8 @@ public class ProteasiXEntryPoint implements EntryPoint {
 	private VerticalPanel searchpanelList_2 = new VerticalPanel();
 	private VerticalPanel searchpanelList2_2 = new VerticalPanel();
 	private ListBox listcs_2 = new ListBox();
-	private ListBox listspecies_2 = new ListBox();
+	private ListBox listproteasespecies_2 = new ListBox();
+	private ListBox listsubstratespecies_2 = new ListBox();
 	private VerticalPanel buttonpanel_2 = new VerticalPanel();
 	private Button exampleButton_2 = new Button("Example");
 	private Button deleteButton_2 = new Button("Delete");
@@ -237,14 +247,22 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		listcs_2.addItem("up to 2 mismatches");
 		listcs_2.addItem("up to 3 mismatches");
 		searchpanelList_2.add(listcs_2);
-		searchpanelList2_2
-		.add(new HTML(
-				"<div align=\"center\">Protease<br />species</div>"));
-		listspecies_2.addItem("Human");
-		listspecies_2.addItem("Rat");
-		listspecies_2.addItem("Mouse");
-		listspecies_2.addItem("All");
-		searchpanelList2_2.add(listspecies_2);
+		searchpanelList2_2.add(new HTML(
+				"<div align=\"center\">Proteases<br />species</div>"));
+		listproteasespecies_2.addItem("Human");
+		listproteasespecies_2.addItem("Rat");
+		listproteasespecies_2.addItem("Mouse");
+		listproteasespecies_2.addItem("All");
+		searchpanelList2_2.add(listproteasespecies_2);
+		searchpanelList_2.addStyleName("pSearchpanel");
+		searchpanelList2_2.addStyleName("pSearchpanel");
+		searchpanelList2_2.add(new HTML(
+				"<div align=\"center\"><br />Substrates<br />species</div>"));
+		listsubstratespecies_2.addItem("Human");
+		listsubstratespecies_2.addItem("Rat");
+		listsubstratespecies_2.addItem("Mouse");
+		listsubstratespecies_2.addItem("All");
+		searchpanelList2_2.add(listsubstratespecies_2);
 		searchpanelList_2.addStyleName("pSearchpanel");
 		searchpanelList2_2.addStyleName("pSearchpanel");
 
@@ -358,7 +376,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				searchBoxStartEnd_2.setText("176-198\n588-624\n59-81\n32-45");
 				searchBoxSequence_2.setText("");
 				listcs_2.setItemSelected(1, true);
-				listspecies_2.setItemSelected(3, true);
+				listproteasespecies_2.setItemSelected(3, true);
 			}
 		});
 
@@ -372,7 +390,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				searchBoxStartEnd_2.setText("");
 				searchBoxSequence_2.setText("");
 				listcs_2.setItemSelected(0, true);
-				listspecies_2.setItemSelected(0, true);
+				listproteasespecies_2.setItemSelected(0, true);
 			}
 		});
 
@@ -383,13 +401,20 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				// keep search to setup prepared statement
 				// init rpc
 				rpcInit();
-				generateSearchRequest_2();
+				try {
+					// TODO modify here
+					generateSearchRequest_2();
+					
+				}
+					catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				// start the process
 
 			}
 		});
 
-		
 	}
 
 	/**
@@ -706,7 +731,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		summTable.addColumn(csCol, "Cleavage Sites");
 		summTable.addColumn(dispepCol, "Peptides in disease");
 		summTable.addColumn(strupepCol, "Peptides with structure/function");
-		
+
 		summTable.setColumnWidth(csCol, 10, Unit.PCT);
 		summTable.setColumnWidth(dispepCol, 10, Unit.PCT);
 		summTable.setColumnWidth(strupepCol, 10, Unit.PCT);
@@ -736,9 +761,8 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		CellTable.Resources ptableresources = GWT.create(PTableResources.class);
 		CellTable<ResultbySubstrateData> dispepTable = new CellTable<ResultbySubstrateData>(
 				rowsdispep, ptableresources);
-//		dispepTable.setWidth("1200px");
+		// dispepTable.setWidth("1200px");
 		dispepTable.setWidth("100%", true);
-
 
 		// Create columns
 		Column<ResultbySubstrateData, SafeHtml> substrateCol = new Column<ResultbySubstrateData, SafeHtml>(
@@ -1020,8 +1044,10 @@ public class ProteasiXEntryPoint implements EntryPoint {
 
 						// Compare the symbol columns.
 						if (o1 != null) {
-							return (o2 != null) ? o1.peptide.disease.toUpperCase()
-									.compareTo(o2.peptide.disease.toUpperCase()) : 1;
+							return (o2 != null) ? o1.peptide.disease
+									.toUpperCase().compareTo(
+											o2.peptide.disease.toUpperCase())
+									: 1;
 						}
 						return -1;
 					}
@@ -1030,32 +1056,31 @@ public class ProteasiXEntryPoint implements EntryPoint {
 
 		// We know that the data is sorted alphabetically by default.
 		dispepTable.getColumnSortList().push(diseaseCol);
-		
+
 		// Add a ColumnSortEvent.ListHandler to connect sorting to the
-				// java.util.List.
-				ListHandler<ResultbySubstrateData> sequenceColSortHandler = new ListHandler<ResultbySubstrateData>(
-						peplist);
-				sequenceColSortHandler.setComparator(sequenceCol,
-						new Comparator<ResultbySubstrateData>() {
-							public int compare(ResultbySubstrateData o1,
-									ResultbySubstrateData o2) {
-								if (o1 == o2) {
-									return 0;
-								}
+		// java.util.List.
+		ListHandler<ResultbySubstrateData> sequenceColSortHandler = new ListHandler<ResultbySubstrateData>(
+				peplist);
+		sequenceColSortHandler.setComparator(sequenceCol,
+				new Comparator<ResultbySubstrateData>() {
+					public int compare(ResultbySubstrateData o1,
+							ResultbySubstrateData o2) {
+						if (o1 == o2) {
+							return 0;
+						}
 
-								// Compare the symbol columns.
-								if (o1 != null) {
-									return (o2 != null) ? o1.peptide.sequence
-											.compareTo(o2.peptide.sequence) : 1;
-								}
-								return -1;
-							}
-						});
-				dispepTable.addColumnSortHandler(sequenceColSortHandler);
+						// Compare the symbol columns.
+						if (o1 != null) {
+							return (o2 != null) ? o1.peptide.sequence
+									.compareTo(o2.peptide.sequence) : 1;
+						}
+						return -1;
+					}
+				});
+		dispepTable.addColumnSortHandler(sequenceColSortHandler);
 
-				// We know that the data is sorted alphabetically by default.
-				dispepTable.getColumnSortList().push(sequenceCol);
-
+		// We know that the data is sorted alphabetically by default.
+		dispepTable.getColumnSortList().push(sequenceCol);
 
 		// Add a ColumnSortEvent.ListHandler to connect sorting to the
 		// java.util.List.
@@ -1092,7 +1117,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		CellTable.Resources ptableresources = GWT.create(PTableResources.class);
 		CellTable<ResultbySubstrateData> strupepTable = new CellTable<ResultbySubstrateData>(
 				rowsstrupep, ptableresources);
-//		strupepTable.setWidth("1200px");
+		// strupepTable.setWidth("1200px");
 		strupepTable.setWidth("100%", true);
 
 		// Create columns
@@ -1333,7 +1358,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				.create(CSTableResources.class);
 		CellTable<ResultbySubstrateData> cleavageSiteTable = new CellTable<ResultbySubstrateData>(
 				rowscs, cstableresources);
-//		cleavageSiteTable.setWidth("900px");
+		// cleavageSiteTable.setWidth("900px");
 		cleavageSiteTable.setWidth("100%", true);
 
 		// Create columns
@@ -1375,8 +1400,8 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				String middle1 = cleavageSite.substring(2, 3);
 				String middle2 = cleavageSite.substring(3, 4);
 
-				String output = "<p>" + begin + "<strong><u>" + middle1 + "\u00A6"
-							+ middle2 + "</u></strong>" + end + "</p>";
+				String output = "<p>" + begin + "<strong><u>" + middle1
+						+ "\u00A6" + middle2 + "</u></strong>" + end + "</p>";
 
 				return new SafeHtmlBuilder().appendHtmlConstant(output)
 						.toSafeHtml();
@@ -1399,7 +1424,8 @@ public class ProteasiXEntryPoint implements EntryPoint {
 						&& !(resultbySubstrateData.p1prime == 0)) {
 					output = "<a href=\"http://www.uniprot.org/blast/?about="
 							+ suni + "[" + csstart + "-" + csend + "]"
-							+ "\"target=\"_blank\">" + resultbySubstrateData.p1 + " - " + resultbySubstrateData.p1prime + "</a>";
+							+ "\"target=\"_blank\">" + resultbySubstrateData.p1
+							+ " - " + resultbySubstrateData.p1prime + "</a>";
 				} else {
 					output = "? - ?";
 				}
@@ -1409,7 +1435,6 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			}
 
 		};
-
 
 		Column<ResultbySubstrateData, SafeHtml> protSymbolCol = new Column<ResultbySubstrateData, SafeHtml>(
 				new SafeHtmlCell()) {
@@ -1501,7 +1526,8 @@ public class ProteasiXEntryPoint implements EntryPoint {
 
 				for (String string : valuesplit) {
 					valuesplit[i].trim();
-					pmid = pmid + "; "
+					pmid = pmid
+							+ "; "
 							+ "<p><font size=\"1\"><a href=\"http://www.ncbi.nlm.nih.gov/pubmed/"
 							+ valuesplit[i] + "\"target=\"_blank\">"
 							+ valuesplit[i] + "</a></font></p>";
@@ -1523,8 +1549,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		// Add the columns.
 		cleavageSiteTable.addColumn(substrateCol, "\u25B2Substrate\u25BC");
 		cleavageSiteTable.addColumn(substrateSpecies, "S.Taxon");
-		cleavageSiteTable.addColumn(protSymbolCol,
-				"\u25B2Protease\u25BC");
+		cleavageSiteTable.addColumn(protSymbolCol, "\u25B2Protease\u25BC");
 		cleavageSiteTable.addColumn(proteaseSpecies, "P.Taxon");
 		cleavageSiteTable.addColumn(csCol, "\u25B2Position\u25BC");
 		cleavageSiteTable.addColumn(cssequenceCol, "Cleavage Site");
@@ -1539,7 +1564,6 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		cleavageSiteTable.setColumnWidth(cssequenceCol, 20, Unit.PCT);
 		cleavageSiteTable.setColumnWidth(extlinkCol, 10, Unit.PCT);
 		cleavageSiteTable.setColumnWidth(pmidCol, 10, Unit.PCT);
-				
 
 		protein_cs_1.add(cleavageSiteTable);
 
@@ -1607,7 +1631,6 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		// We know that the data is sorted alphabetically by default.
 		cleavageSiteTable.getColumnSortList().push(csCol);
 
-		
 		// Add a ColumnSortEvent.ListHandler to connect sorting to the
 		// java.util.List.
 		ListHandler<ResultbySubstrateData> protSymbolColSortHandler = new ListHandler<ResultbySubstrateData>(
@@ -1633,11 +1656,11 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		// We know that the data is sorted alphabetically by default.
 		cleavageSiteTable.getColumnSortList().push(protSymbolCol);
 
-		
 	}
 
-	private void generateSearchRequest_2() {
-
+	private void generateSearchRequest_2() throws IOException {
+		
+		
 		String subUni = searchBoxUni_2.getText().toUpperCase().trim();
 		String splitSearchUni[] = subUni.split("\n");
 		LinkedList<String> setUni = new LinkedList<String>();
@@ -1703,6 +1726,12 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		} else if (pepMism.contains("3")) {
 			pepMismNumber = 3;
 		}
+		
+		int proteasespeciesIndex = listproteasespecies_2.getSelectedIndex();
+		String proteasespecies = listproteasespecies_2.getItemText(proteasespeciesIndex);
+		
+		int substratespeciesIndex = listsubstratespecies_2.getSelectedIndex();
+		String substratespecies = listsubstratespecies_2.getItemText(substratespeciesIndex);
 
 		SearchRequest[] searchRequest = new SearchRequest[sizeUni];
 		int i = 0;
@@ -1715,6 +1744,8 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				searchRequest[i] = new SearchRequest();
 				searchRequest[i].setPeptideinputnumber(string);
 				searchRequest[i].setPeptideinputmismatch(pepMismNumber);
+				searchRequest[i].setCS_proteasespecies(proteasespecies);
+				searchRequest[i].setCS_substratespecies(substratespecies);
 				searchRequest[i].setRequestnature("peptideRequest");
 				i++;
 			}
@@ -1747,7 +1778,6 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				i++;
 			}
 		}
-
 		
 		getResultbyPeptideInfo_2(searchRequest);
 
@@ -1774,9 +1804,11 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			public void onSuccess(Object result) {
 
 				ResultbySubstrateData[] resultbySubstrate = (ResultbySubstrateData[]) result;
-
+				
+				// TODO modify here
 				// draw PEPTIDE info
 				drawResultbyPeptideInfo_2(resultbySubstrate);
+				
 
 			}
 		};
@@ -1784,7 +1816,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		// remote procedure call to the server to get the bible info
 		callProvider.getResultInfo(searchRequest, callback);
 	}
-
+	
 	private void drawResultbyPeptideInfo_2(
 			ResultbySubstrateData[] resultbySubstrateData) {
 
@@ -1803,20 +1835,37 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		peptideTabPanel_2.selectTab(0);
 		ploading.setVisible(false);
 
-		int speciesIndex = listspecies_2.getSelectedIndex();
-		String species = listspecies_2.getItemText(speciesIndex);
-		System.out.println(species + "species");
-		
+		int proteasespeciesIndex = listproteasespecies_2.getSelectedIndex();
+		String proteasespecies = listproteasespecies_2
+				.getItemText(proteasespeciesIndex);
+		System.out.println(proteasespecies + "species");
+
+		int substratespeciesIndex = listsubstratespecies_2.getSelectedIndex();
+		String substratespecies = listsubstratespecies_2
+				.getItemText(substratespeciesIndex);
+		System.out.println(substratespecies + "species");
+
 		int numbercs_2 = 0;
 		int numberdispep_2 = 0;
 		int numbersumm_2 = 0;
 
 		for (ResultbySubstrateData resultbySubstrateData2 : resultbySubstrateData) {
 			if (resultbySubstrateData2.getNature().equals("cleavagesite")) {
-				if (resultbySubstrateData2.protease.getP_Taxon().equals(species)) {
-				numbercs_2++;
-				} else if (species.equals("All")) {
-				numbercs_2++;
+				if (resultbySubstrateData2.protease.getP_Taxon().equals(
+						proteasespecies)
+						&& resultbySubstrateData2.getCS_substratespecies()
+								.equals(substratespecies)) {
+					numbercs_2++;
+				} else if (proteasespecies.equals("All")
+						&& resultbySubstrateData2.getCS_substratespecies()
+								.equals(substratespecies)) {
+					numbercs_2++;
+				} else if (resultbySubstrateData2.protease.getP_Taxon().equals(
+						proteasespecies)
+						&& substratespecies.equals("All")) {
+					numbercs_2++;
+				} else if (proteasespecies.equals("All") && substratespecies.equals("All")) {
+					numbercs_2++;
 				}
 			} else if (resultbySubstrateData2.getNature().equals("peptide")
 					&& !(resultbySubstrateData2.peptide.disease == null)
@@ -1842,14 +1891,25 @@ public class ProteasiXEntryPoint implements EntryPoint {
 
 		for (int i = 0; i < resultbySubstrateData.length; i++) {
 			if (resultbySubstrateData[i].getNature().equals("cleavagesite")) {
-				if (resultbySubstrateData[i].protease.getP_Taxon().equals(species)) {
+				if (resultbySubstrateData[i].protease.getP_Taxon().equals(
+						proteasespecies) && resultbySubstrateData[i].getCS_substratespecies()
+						.equals(substratespecies)){
 					resultcs_2[k] = resultbySubstrateData[i];
 					k++;
-					} else if (species.equals("All")) {
-						resultcs_2[k] = resultbySubstrateData[i];
-						k++;
-					}
-				
+				} else if (proteasespecies.equals("All")&& resultbySubstrateData[i].getCS_substratespecies()
+						.equals(substratespecies)) {
+					resultcs_2[k] = resultbySubstrateData[i];
+					k++;
+				}  else if (resultbySubstrateData[i].protease.getP_Taxon().equals(
+						proteasespecies)
+						&& substratespecies.equals("All")) {
+					resultcs_2[k] = resultbySubstrateData[i];
+					k++;
+				} else if (proteasespecies.equals("All") && substratespecies.equals("All")) {
+					resultcs_2[k] = resultbySubstrateData[i];
+					k++;
+				}
+
 			} else if (resultbySubstrateData[i].getNature().equals("peptide")
 					&& !(resultbySubstrateData[i].peptide.disease == null)
 					&& resultbySubstrateData[i].peptide.structure == null) {
@@ -1868,33 +1928,38 @@ public class ProteasiXEntryPoint implements EntryPoint {
 					+ resultcs_2[i].substrate.S_Symbol
 					// + resultcs_2[i].CS_terminus
 					+ resultcs_2[i].CS_terminus
-					+ resultcs_2[i].protease.P_Symbol.toUpperCase() + resultcs_2[i].CS_mismatch.toString().charAt(0);
+					+ resultcs_2[i].protease.P_Symbol.toUpperCase()
+					+ resultcs_2[i].CS_mismatch.toString().charAt(0);
 			if (!(resultcs_2[i].CS_database.equals("------"))) {
-			if (!hmap.containsKey(key)) {
-				List value = new ArrayList<Set<String>>();
-				for (int j = 0; j < 13; j++) {
-					value.add(new HashSet<String>());
+				if (!hmap.containsKey(key)) {
+					List value = new ArrayList<Set<String>>();
+					for (int j = 0; j < 13; j++) {
+						value.add(new HashSet<String>());
+					}
+					hmap.put(key, value);
 				}
-				hmap.put(key, value);
+				hmap.get(key).get(0).add(resultcs_2[i].CSInput_number);
+				hmap.get(key).get(1).add(resultcs_2[i].CS_NorCterm);
+				hmap.get(key).get(2).add(resultcs_2[i].substrate.S_Symbol);
+				hmap.get(key).get(3).add(resultcs_2[i].peptide.sequence);
+				hmap.get(key).get(4).add(resultcs_2[i].CS_terminus);
+				hmap.get(key)
+						.get(5)
+						.add(resultcs_2[i].CS_database
+								+ resultcs_2[i].CS_databasesubstrate);
+				String mismatch = resultcs_2[i].CS_mismatch.toString();
+				mismatch = mismatch.replaceAll("\\*", "");
+				mismatch = mismatch.replaceAll(" ", "");
+				mismatch = mismatch.replaceAll(",", "");
+				hmap.get(key).get(6).add(mismatch);
+				hmap.get(key).get(7)
+						.add(resultcs_2[i].protease.P_Symbol.toUpperCase());
+				hmap.get(key).get(8).add(resultcs_2[i].externallink);
+				hmap.get(key).get(9).add(resultcs_2[i].pmid);
+				hmap.get(key).get(12).add(resultcs_2[i].protease.P_Uniprotid);
+				hmap.get(key).get(10).add(resultcs_2[i].substrate.S_Taxon);
+				hmap.get(key).get(11).add(resultcs_2[i].protease.P_Taxon);
 			}
-			hmap.get(key).get(0).add(resultcs_2[i].CSInput_number);
-			hmap.get(key).get(1).add(resultcs_2[i].CS_NorCterm);
-			hmap.get(key).get(2).add(resultcs_2[i].substrate.S_Symbol);
-			hmap.get(key).get(3).add(resultcs_2[i].peptide.sequence);
-			hmap.get(key).get(4).add(resultcs_2[i].CS_terminus);
-			hmap.get(key).get(5).add(resultcs_2[i].CS_database + resultcs_2[i].CS_databasesubstrate);
-			String mismatch = resultcs_2[i].CS_mismatch.toString();
-			mismatch = mismatch.replaceAll("\\*", "");
-			mismatch = mismatch.replaceAll(" ", "");
-			mismatch = mismatch.replaceAll(",", "");
-			hmap.get(key).get(6).add(mismatch);
-			hmap.get(key).get(7).add(resultcs_2[i].protease.P_Symbol.toUpperCase());
-			hmap.get(key).get(8).add(resultcs_2[i].externallink);
-			hmap.get(key).get(9).add(resultcs_2[i].pmid);
-			hmap.get(key).get(12).add(resultcs_2[i].protease.P_Uniprotid);
-			hmap.get(key).get(10).add(resultcs_2[i].substrate.S_Taxon);
-			hmap.get(key).get(11).add(resultcs_2[i].protease.P_Taxon);
-		}
 		}
 		Iterator iterator = hmap.values().iterator();
 		int numbercsSHORT_2 = hmap.size();
@@ -1988,13 +2053,11 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			@Override
 			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
 				String sequence = resultbySubstrateData.peptide.sequence;
-				sequence = sequence.replaceAll("Ph",
-						"P");
-						
-				sequence =	"<p align=\"left\"><font size=\"1\">"
-						+ sequence.toUpperCase()
-						+ "</font></p>";
-	
+				sequence = sequence.replaceAll("Ph", "P");
+
+				sequence = "<p align=\"left\"><font size=\"1\">"
+						+ sequence.toUpperCase() + "</font></p>";
+
 				return new SafeHtmlBuilder().appendHtmlConstant(sequence)
 						.toSafeHtml();
 			}
@@ -2068,11 +2131,10 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		summTable.addColumn(inputSeqCol, "Sequence");
 		summTable.addColumn(csCol, "Cleavage Sites");
 		summTable.addColumn(dispepCol, "Peptides in disease");
-		
+
 		summTable.setColumnWidth(csCol, 10, Unit.PCT);
 		summTable.setColumnWidth(dispepCol, 10, Unit.PCT);
-		
-		
+
 		peptide_summ_2.add(summTable);
 
 		// Create a data provider.
@@ -2125,8 +2187,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			}
 
 		};
-	
-		
+
 		TextColumn<ResultbySubstrateData> substrateSpecies = new TextColumn<ResultbySubstrateData>() {
 			@Override
 			public String getValue(ResultbySubstrateData resultbySubstrateData) {
@@ -2134,8 +2195,6 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				return species;
 			}
 		};
-
-		
 
 		TextColumn<ResultbySubstrateData> startCol = new TextColumn<ResultbySubstrateData>() {
 			@Override
@@ -2188,7 +2247,6 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			}
 
 		};
-		
 
 		TextColumn<ResultbySubstrateData> anatomyCol = new TextColumn<ResultbySubstrateData>() {
 			@Override
@@ -2197,8 +2255,6 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				return anat;
 			}
 		};
-
-		
 
 		Column<ResultbySubstrateData, SafeHtml> regulationCol = new Column<ResultbySubstrateData, SafeHtml>(
 				new SafeHtmlCell()) {
@@ -2214,7 +2270,8 @@ public class ProteasiXEntryPoint implements EntryPoint {
 							+ resultbySubstrateData.peptide.regulation;
 				} else if (resultbySubstrateData.peptide.regulation.equals("")) {
 					regulation = "n.d.";
-				} else if (resultbySubstrateData.peptide.regulation.equals("n.d.")) {
+				} else if (resultbySubstrateData.peptide.regulation
+						.equals("n.d.")) {
 					regulation = "n.d.";
 				}
 				return new SafeHtmlBuilder().appendHtmlConstant(regulation)
@@ -2223,7 +2280,6 @@ public class ProteasiXEntryPoint implements EntryPoint {
 
 		};
 
-		
 		Column<ResultbySubstrateData, SafeHtml> pmidCol = new Column<ResultbySubstrateData, SafeHtml>(
 				new SafeHtmlCell()) {
 			@Override
@@ -2421,8 +2477,10 @@ public class ProteasiXEntryPoint implements EntryPoint {
 
 						// Compare the symbol columns.
 						if (o1 != null) {
-							return (o2 != null) ? o1.peptide.disease.toUpperCase()
-									.compareTo(o2.peptide.disease.toUpperCase()) : 1;
+							return (o2 != null) ? o1.peptide.disease
+									.toUpperCase().compareTo(
+											o2.peptide.disease.toUpperCase())
+									: 1;
 						}
 						return -1;
 					}
@@ -2456,7 +2514,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 
 		// We know that the data is sorted alphabetically by default.
 		dispepTable.getColumnSortList().push(regulationCol);
-		
+
 		// Add a ColumnSortEvent.ListHandler to connect sorting to the
 		// java.util.List.
 		ListHandler<ResultbySubstrateData> sequenceColSortHandler = new ListHandler<ResultbySubstrateData>(
@@ -2528,38 +2586,43 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			}
 		};
 
-		
 		Column<ResultbySubstrateData, SafeHtml> sequenceCol = new Column<ResultbySubstrateData, SafeHtml>(
 				new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
 				String sequence = null;
-				if (resultbySubstrateData.peptide.sequence.length() > 16) {			
-				if (resultbySubstrateData.CS_NorCterm.contains("N")) {
-					sequence = "<p><font size=\"1\"><font color= #82a38d><u>"
-							+ resultbySubstrateData.peptide.sequence.substring(
-									0, 3)
-							+ "</u></font>"
-							+ resultbySubstrateData.peptide.sequence
-									.substring(3, 8) +"[...]" + resultbySubstrateData.peptide.sequence
-									.substring(resultbySubstrateData.peptide.sequence.length()-8) + "</font></p>";
-				}
-				if (resultbySubstrateData.CS_NorCterm.contains("C")) {
-					int length = resultbySubstrateData.peptide.sequence
-							.length();
-					sequence = "<p><font size=\"1\">"
-							+ resultbySubstrateData.peptide.sequence.substring(
-									0, 8) + "[...]" + resultbySubstrateData.peptide.sequence
-									.substring(length - 8, length - 3)
-							+ "<font color= #82a38d><u>"
-							+ resultbySubstrateData.peptide.sequence
-									.substring(length - 3) + "</u></font></font></p>";
-				}
+				if (resultbySubstrateData.peptide.sequence.length() > 16) {
+					if (resultbySubstrateData.CS_NorCterm.contains("N")) {
+						sequence = "<p><font size=\"1\"><font color= #82a38d><u>"
+								+ resultbySubstrateData.peptide.sequence
+										.substring(0, 3)
+								+ "</u></font>"
+								+ resultbySubstrateData.peptide.sequence
+										.substring(3, 8)
+								+ "[...]"
+								+ resultbySubstrateData.peptide.sequence
+										.substring(resultbySubstrateData.peptide.sequence
+												.length() - 8) + "</font></p>";
+					}
+					if (resultbySubstrateData.CS_NorCterm.contains("C")) {
+						int length = resultbySubstrateData.peptide.sequence
+								.length();
+						sequence = "<p><font size=\"1\">"
+								+ resultbySubstrateData.peptide.sequence
+										.substring(0, 8)
+								+ "[...]"
+								+ resultbySubstrateData.peptide.sequence
+										.substring(length - 8, length - 3)
+								+ "<font color= #82a38d><u>"
+								+ resultbySubstrateData.peptide.sequence
+										.substring(length - 3)
+								+ "</u></font></font></p>";
+					}
 				} else {
 					if (resultbySubstrateData.CS_NorCterm.contains("N")) {
 						sequence = "<p><font size=\"1\"><font color= #82a38d><u>"
-								+ resultbySubstrateData.peptide.sequence.substring(
-										0, 3)
+								+ resultbySubstrateData.peptide.sequence
+										.substring(0, 3)
 								+ "</u></font>"
 								+ resultbySubstrateData.peptide.sequence
 										.substring(3) + "</font></p>";
@@ -2568,13 +2631,14 @@ public class ProteasiXEntryPoint implements EntryPoint {
 						int length = resultbySubstrateData.peptide.sequence
 								.length();
 						sequence = "<p><font size=\"1\">"
-								+ resultbySubstrateData.peptide.sequence.substring(
-										0, length - 3)
+								+ resultbySubstrateData.peptide.sequence
+										.substring(0, length - 3)
 								+ "<font color= #82a38d><u>"
 								+ resultbySubstrateData.peptide.sequence
-										.substring(length - 3) + "</u></font></font></p>";
+										.substring(length - 3)
+								+ "</u></font></font></p>";
 					}
-					
+
 				}
 				return new SafeHtmlBuilder().appendHtmlConstant(sequence)
 						.toSafeHtml();
@@ -2592,10 +2656,12 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				String end = cleavageSite.substring(3, 6);
 				String cs = null;
 				if (resultbySubstrateData.CS_NorCterm.contains("N")) {
-					cs = "<p>" + begin + "\u00A6<font color= #82a38d><u>" + end + "</u></font></p>";
+					cs = "<p>" + begin + "\u00A6<font color= #82a38d><u>" + end
+							+ "</u></font></p>";
 				}
 				if (resultbySubstrateData.CS_NorCterm.contains("C")) {
-					cs = "<p><font color= #82a38d><u>" + begin + "</u></font>\u00A6" + end + "</p>";
+					cs = "<p><font color= #82a38d><u>" + begin
+							+ "</u></font>\u00A6" + end + "</p>";
 				}
 
 				return new SafeHtmlBuilder().appendHtmlConstant(cs)
@@ -2608,62 +2674,65 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
-				String splitmultiple[] = resultbySubstrateData.CS_database.split(", ");
+				String splitmultiple[] = resultbySubstrateData.CS_database
+						.split(", ");
 				String output = "";
-				for (int i = 0; i< splitmultiple.length; i++) {	
-				String searched = resultbySubstrateData.CS_terminus;
-				String found = splitmultiple[i];
-				String searchedsplit[] = searched.split("");
-				String foundsplit[] = found.split("");
-				String one = null;
-				String two = null;
-				String three = null;
-				String four = null;
-				String five = null;
-				String six = null;
-				if (searchedsplit[1].equals(foundsplit[1])) {
-					one = searchedsplit[1];
-				} else {
-					one = foundsplit[1].toLowerCase();
+				for (int i = 0; i < splitmultiple.length; i++) {
+					String searched = resultbySubstrateData.CS_terminus;
+					String found = splitmultiple[i];
+					String searchedsplit[] = searched.split("");
+					String foundsplit[] = found.split("");
+					String one = null;
+					String two = null;
+					String three = null;
+					String four = null;
+					String five = null;
+					String six = null;
+					if (searchedsplit[1].equals(foundsplit[1])) {
+						one = searchedsplit[1];
+					} else {
+						one = foundsplit[1].toLowerCase();
+					}
+					if (searchedsplit[2].equals(foundsplit[2])) {
+						two = searchedsplit[2];
+					} else {
+						two = foundsplit[2].toLowerCase();
+					}
+					if (searchedsplit[3].equals(foundsplit[3])) {
+						three = searchedsplit[3];
+					} else {
+						three = foundsplit[3].toLowerCase();
+					}
+					if (searchedsplit[4].equals(foundsplit[4])) {
+						four = searchedsplit[4];
+					} else {
+						four = foundsplit[4].toLowerCase();
+					}
+					if (searchedsplit[5].equals(foundsplit[5])) {
+						five = searchedsplit[5];
+					} else {
+						five = foundsplit[5].toLowerCase();
+					}
+					if (searchedsplit[6].equals(foundsplit[6])) {
+						six = searchedsplit[6];
+					} else {
+						six = foundsplit[6].toLowerCase();
+					}
+					String substrate = "";
+					for (int j = 7; j < foundsplit.length; j++) {
+						substrate = substrate + foundsplit[j];
+					}
+					if (substrate
+							.equalsIgnoreCase(resultbySubstrateData.substrate.S_Symbol)) {
+						substrate = "<u>" + substrate + "</u>";
+					}
+					output = output + " " + "<p>" + one + two + three + ""
+							+ "\u00A6" + four + five + six + " (" + substrate
+							+ ")" + "</p>";
+
 				}
-				if (searchedsplit[2].equals(foundsplit[2])) {
-					two = searchedsplit[2];
-				} else {
-					two = foundsplit[2].toLowerCase();
-				}
-				if (searchedsplit[3].equals(foundsplit[3])) {
-					three = searchedsplit[3];
-				} else {
-					three = foundsplit[3].toLowerCase();
-				}
-				if (searchedsplit[4].equals(foundsplit[4])) {
-					four = searchedsplit[4];
-				} else {
-					four = foundsplit[4].toLowerCase();
-				}
-				if (searchedsplit[5].equals(foundsplit[5])) {
-					five = searchedsplit[5];
-				} else {
-					five = foundsplit[5].toLowerCase();
-				}
-				if (searchedsplit[6].equals(foundsplit[6])) {
-					six = searchedsplit[6];
-				} else {
-					six = foundsplit[6].toLowerCase();
-				}
-				String substrate = "";
-				for (int j = 7; j < foundsplit.length; j++) {
-					substrate = substrate + foundsplit[j];
-				}
-				if (substrate.equalsIgnoreCase(resultbySubstrateData.substrate.S_Symbol)) {
-					substrate = "<u>" + substrate + "</u>";
-				}
-				 output = output + " " + "<p>" + one + two + three + "" + "\u00A6" + four + five
-							+ six + " ("+ substrate + ")" + "</p>";
-				
-				}
-				return new SafeHtmlBuilder().appendHtmlConstant(output
-						).toSafeHtml();
+				return new SafeHtmlBuilder().appendHtmlConstant(output)
+						.toSafeHtml();
 
 			}
 
@@ -2673,7 +2742,8 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(ResultbySubstrateData resultbySubstrateData) {
-				String symbol = resultbySubstrateData.protease.P_Symbol.toUpperCase();
+				String symbol = resultbySubstrateData.protease.P_Symbol
+						.toUpperCase();
 				return new SafeHtmlBuilder().appendHtmlConstant(
 						"<a href=\"http://www.uniprot.org/uniprot/"
 								+ resultbySubstrateData.protease.P_Uniprotid
@@ -2683,7 +2753,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 			}
 
 		};
-		
+
 		TextColumn<ResultbySubstrateData> proteaseSpecies = new TextColumn<ResultbySubstrateData>() {
 			@Override
 			public String getValue(ResultbySubstrateData resultbySubstrateData) {
@@ -2691,7 +2761,7 @@ public class ProteasiXEntryPoint implements EntryPoint {
 				species = species.replaceAll("Human", "H");
 				species = species.replaceAll("Mouse", "M");
 				species = species.replaceAll("Rat", "R");
-				
+
 				return species;
 			}
 		};
@@ -2932,8 +3002,10 @@ public class ProteasiXEntryPoint implements EntryPoint {
 
 						// Compare the symbol columns.
 						if (o1 != null) {
-							return (o2 != null) ? o1.protease.P_Symbol.toUpperCase()
-									.compareTo(o2.protease.P_Symbol.toUpperCase()) : 1;
+							return (o2 != null) ? o1.protease.P_Symbol
+									.toUpperCase().compareTo(
+											o2.protease.P_Symbol.toUpperCase())
+									: 1;
 						}
 						return -1;
 					}
@@ -2943,5 +3015,82 @@ public class ProteasiXEntryPoint implements EntryPoint {
 		// We know that the data is sorted alphabetically by default.
 		csTable.getColumnSortList().push(proteaseCol);
 
+	}
+	
+	private void populateHeaders(PrintStream csvWriter) {
+		csvWriter.print("PeptideId");
+		csvWriter.print("\t");
+		csvWriter.print("SubstrateSymbol");
+		csvWriter.print("\t");
+		csvWriter.print("SubstrateUniprotID");
+		csvWriter.print("\t");
+		csvWriter.print("PeptideStart");
+		csvWriter.print("\t");
+		csvWriter.print("PeptideEnd");
+		csvWriter.print("\t");
+		csvWriter.print("PeptideSequence");
+		csvWriter.print("\t");
+		csvWriter.print("Terminus");
+		csvWriter.print("\t");
+		csvWriter.print("CleavageSite");
+		csvWriter.print("\t");
+		csvWriter.print("ProteaseSymbol");
+		csvWriter.print("\t");
+		csvWriter.print("CleavageObservedIn?");
+		csvWriter.print("\t");
+		csvWriter.print("Mismatch");
+		csvWriter.print("\n");
+		
+	}
+	
+	private void populateData(PrintStream csvWriter, ResultbySubstrateData cleavagesites) {
+		// System.out.println(cleavageSiteDBEntry);
+
+		String id = cleavagesites.CSInput_number;
+		String norc = cleavagesites.CS_NorCterm;
+		String substrateName = cleavagesites.substrate.S_Symbol;
+		String substrateUni = cleavagesites.substrate.S_Uniprotid;
+		int pepStart = cleavagesites.CSInput_start;
+		int pepEnd = cleavagesites.CSInput_end;
+		String pepSequence = cleavagesites.peptide.sequence;
+		String cs = cleavagesites.CS_terminus;
+		String protease = cleavagesites.protease.P_Symbol;
+		String mism = cleavagesites.CS_mismatch;
+		String observedsub = null;
+		
+		String splitmultiple[] = cleavagesites.CS_database
+				.split(", ");
+		for (int i = 0; i < splitmultiple.length; i++) {
+			String found = splitmultiple[i];
+			String foundsplit[] = found.split("");
+			observedsub = "";
+			for (int j = 7; j < foundsplit.length; j++) {
+				observedsub = observedsub + foundsplit[j];
+			}
+		}
+		
+		
+		csvWriter.print(id);
+		csvWriter.print("\t");
+		csvWriter.print(substrateName);
+		csvWriter.print("\t");
+		csvWriter.print(substrateUni);
+		csvWriter.print("\t");
+		csvWriter.print(pepStart);
+		csvWriter.print("\t");
+		csvWriter.print(pepEnd);
+		csvWriter.print("\t");
+		csvWriter.print(pepSequence);
+		csvWriter.print("\t");
+		csvWriter.print(norc);
+		csvWriter.print("\t");
+		csvWriter.print(cs);
+		csvWriter.print("\t");
+		csvWriter.print(protease);
+		csvWriter.print("\t");
+		csvWriter.print(observedsub);
+		csvWriter.print("\t");
+		csvWriter.print(mism);
+		csvWriter.print("\n");
 	}
 }

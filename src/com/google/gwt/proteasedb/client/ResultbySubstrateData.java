@@ -123,6 +123,7 @@ public class ResultbySubstrateData implements IsSerializable{
 	}
 
 	public String CS_terminus;
+	public String CS_substratespecies;
 	public String CS_NorCterm;
 	public String CS_databasesubstrate;
 	public String CSInput_substrate; 
@@ -138,6 +139,16 @@ public class ResultbySubstrateData implements IsSerializable{
 
 	public void setCleavageSite(String cleavageSite) {
 		this.cleavageSite = cleavageSite;
+	}
+
+
+	public String getCS_substratespecies() {
+		return CS_substratespecies;
+	}
+
+
+	public void setCS_substratespecies(String cS_substratespecies) {
+		CS_substratespecies = cS_substratespecies;
 	}
 
 

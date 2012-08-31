@@ -1,12 +1,25 @@
 package com.google.gwt.proteasedb.server;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.gwt.proteasedb.client.CsJava_1;
 import com.google.gwt.proteasedb.client.DisPepJava_1;
@@ -142,12 +155,15 @@ public class DB_Protease extends DB_Conn {
 
 			csjava = new CsJava_1[rsSize2];
 			while (result2.next()) {
+				if (!result2
+						.getString("CleavageSite_Sequence").equals("------")) {
 				csjava[i] = new CsJava_1();
 				String cleavageSite_Sequence = result2
 						.getString("CleavageSite_Sequence");
 				csjava[i].P1 = result2.getInt("P1");
 				csjava[i].P1prime = result2.getInt("P1prime");
 				csjava[i].CleavageSite_substratesymbol = result2.getString("S_Symbol");
+				csjava[i].CleavageSite_substratespecies = result2.getString("S_Species");
 				csjava[i].External_link = result2.getString("External_link");
 				csjava[i].PMID = result2.getString("PMID");
 				csjava[i].P_UniprotId = result2.getString("P_UniprotId");
@@ -192,7 +208,7 @@ public class DB_Protease extends DB_Conn {
 				csjava[i].CleavageSite_Sequence = cleavageSite_Sequence;
 				i++;
 			}
-
+			}
 			// clean up
 			result2.close();
 			s2.close();
@@ -335,7 +351,8 @@ public class DB_Protease extends DB_Conn {
 
 		int k = 0;
 		ResultbySubstrateData[] lastcapacityarray = new ResultbySubstrateData[k];
-
+		
+		
 		for (SearchRequest searchReq : searchRequest) {
 			
 			
@@ -691,6 +708,8 @@ public class DB_Protease extends DB_Conn {
 				int pepEnd = searchReq.getPeptideinputend();
 
 				int mismatch = searchReq.getPeptideinputmismatch();
+				String proteasespecies = searchReq.getCS_proteasespecies();
+				String substratespecies = searchReq.getCS_substratespecies();
 
 				Connection connection = getConn();
 				PreparedStatement ps = connection
@@ -822,16 +841,44 @@ public class DB_Protease extends DB_Conn {
 							// ONE HERE BUT ANYWAY...)
 							for (int j1 = 0; j1 < getNodeListbyXPath
 									.getLength(); j1++) {
-								// CHECK Substrate IN SQL
-								String querySubstrate = "SELECT * FROM SUBSTRATE WHERE S_UniprotID = ?";
-								String outputsubstrate = getSubstrateSql(
-										querySubstrate, pepSubstrateId);
-								String outputsubstratesplit[] = outputsubstrate
-										.split("\n");
-								substrate1.S_NL_Name = outputsubstratesplit[0];
-								substrate1.S_Uniprotid = searchReq.peptideinputuni;
-								substrate1.S_Symbol = outputsubstratesplit[1];
-								substrate1.S_Taxon = outputsubstratesplit[2];
+								
+								XPathNodeUniprot XPathNoder3 = new XPathNodeUniprot();
+								String xpathQueryNode3 = "/uniprot/entry/accession/text()";
+								NodeList getNodeListByXPathNoder3 = XPathNoder3
+										.getNodeListByXPath(xpathQueryNode3,
+												getNodeListbyXPath.item(j1));
+								LinkedList<String> stringfromNodelist3 = l1
+										.getStringfromNodelist(getNodeListByXPathNoder3);
+								substrate1.S_Uniprotid = stringfromNodelist3.getFirst();
+								
+								XPathNodeUniprot XPathNoder4 = new XPathNodeUniprot();
+								String xpathQueryNode4 = "/uniprot/entry/protein/recommendedName/fullName/text()";
+								NodeList getNodeListByXPathNoder4 = XPathNoder4
+										.getNodeListByXPath(xpathQueryNode4,
+												getNodeListbyXPath.item(j1));
+								LinkedList<String> stringfromNodelist4 = l1
+										.getStringfromNodelist(getNodeListByXPathNoder4);
+								substrate1.S_NL_Name = stringfromNodelist4.getFirst();
+								
+								XPathNodeUniprot XPathNoder5 = new XPathNodeUniprot();
+								String xpathQueryNode5 = "/uniprot/entry/gene/name[@type='primary']/text()";
+								NodeList getNodeListByXPathNoder5 = XPathNoder5
+										.getNodeListByXPath(xpathQueryNode5,
+												getNodeListbyXPath.item(j1));
+								LinkedList<String> stringfromNodelist5 = l1
+										.getStringfromNodelist(getNodeListByXPathNoder5);
+								substrate1.S_Symbol = stringfromNodelist5.getFirst();
+								
+								XPathNodeUniprot XPathNoder6 = new XPathNodeUniprot();
+								String xpathQueryNode6 = "/uniprot/entry/organism/name[@type='common']/text()";
+								NodeList getNodeListByXPathNoder6 = XPathNoder6
+										.getNodeListByXPath(xpathQueryNode6,
+												getNodeListbyXPath.item(j1));
+								LinkedList<String> stringfromNodelist6 = l1
+										.getStringfromNodelist(getNodeListByXPathNoder6);
+								substrate1.S_Taxon = stringfromNodelist6.getFirst();
+								
+
 								firstcapacityarray[i] = new ResultbySubstrateData();
 								firstcapacityarray[i].setSubstrate(substrate1);
 								PeptideData peptide = new PeptideData();
@@ -956,6 +1003,7 @@ public class DB_Protease extends DB_Conn {
 						System.out.println(cTerm);
 					}
 				}
+				
 				String n1 = nTerm.substring(0, 1);
 				String n2 = nTerm.substring(1, 2);
 				String n3 = nTerm.substring(2, 3);
@@ -1155,26 +1203,59 @@ public class DB_Protease extends DB_Conn {
 				}
 				
 				String prequery = "";
+				String queryCleavagesite = "";
+				String terminus = "";
+				String nOrC = "";
+				int rsSize = 0;
+				int rsSizeC = 0;
 				
 				if (mismatch == 0) {
 					
 					int gaps = 0;
 					
 					//check CS in SQL 0 MM N term
+					if (!nTerm.contains("---")) {
 					for (int j=0; j<numismN0; j++) {
 					String cs = mismN0[j].getCs_pattern();
 					prequery = prequery + " OR CleavageSite_Sequence = '" + cs + "'";
 					}
 					prequery = prequery.replaceFirst(" OR", "");
-					String queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					
+					String queryprotspecies = "null";
+					String querysubspecies = "null";
+					
+					if (proteasespecies.equals("Human")) {
+						queryprotspecies = "P_Species = 'Human'";
+					} else if (proteasespecies.equals("Mouse")) {
+						queryprotspecies = "P_Species = 'Mouse'";
+					} else if (proteasespecies.equals("Rat")) {
+						queryprotspecies = "P_Species = 'Rat'";
+					} else {
+						queryprotspecies = "";
+					}
+
+					if (substratespecies.equals("Human")) {
+						querysubspecies = "AND S_Species = 'Human' AND (";
+					} else if (substratespecies.equals("Mouse")) {
+						querysubspecies = "AND S_Species = 'Mouse' AND (";
+					} else if (substratespecies.equals("Rat")) {
+						querysubspecies = "AND S_Species = 'Rat' AND (";
+					} else {
+						querysubspecies = "";
+					}
+
+					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE "
+							+ queryprotspecies
+							+ querysubspecies
+							+ prequery + ")  ORDER BY P_Symbol";
 					System.out.println(queryCleavagesite);
 					
-					String terminus = nTerm;
-					String nOrC = "NTerm";
+					terminus = nTerm;
+					nOrC = "NTerm";
 					
 									
 					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
-					int rsSize = csjava.length;
+					rsSize = csjava.length;
 					System.out.println(rsSize + "apres");
 //
 					if (rsSize > 0) {	
@@ -1200,15 +1281,50 @@ public class DB_Protease extends DB_Conn {
 							i++;
 						}
 					}
-					
+					} else {
+						kIntN = kFirst;
+						System.out.println(kFirst + "kFirst");
+						System.out.println(kIntN + "kInt");
+						intermediatecapacityarrayNterm = new ResultbySubstrateData[kIntN];
+						System.arraycopy(firstcapacityarray, 0, intermediatecapacityarrayNterm,
+								0, kFirst);
+					}
 					//check CS in SQL 0 MM C term
 					prequery = "";
+					if (!cTerm.contains("---")) {
 					for (int j=0; j<numismC0; j++) {
 					String cs = mismC0[j].getCs_pattern();
 					prequery = prequery + " OR CleavageSite_Sequence = '" + cs + "'";
 					}
 					prequery = prequery.replaceFirst(" OR", "");
-					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					
+					String queryprotspecies = "null";
+					String querysubspecies = "null";
+					
+					if (proteasespecies.equals("Human")) {
+						queryprotspecies = "P_Species = 'Human'";
+					} else if (proteasespecies.equals("Mouse")) {
+						queryprotspecies = "P_Species = 'Mouse'";
+					} else if (proteasespecies.equals("Rat")) {
+						queryprotspecies = "P_Species = 'Rat'";
+					} else {
+						queryprotspecies = "";
+					}
+
+					if (substratespecies.equals("Human")) {
+						querysubspecies = "AND S_Species = 'Human' AND (";
+					} else if (substratespecies.equals("Mouse")) {
+						querysubspecies = "AND S_Species = 'Mouse' AND (";
+					} else if (substratespecies.equals("Rat")) {
+						querysubspecies = "AND S_Species = 'Rat' AND (";
+					} else {
+						querysubspecies = "";
+					}
+
+					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE "
+							+ queryprotspecies
+							+ querysubspecies
+							+ prequery + ")  ORDER BY P_Symbol";
 					System.out.println(queryCleavagesite);
 					
 					terminus = cTerm;
@@ -1216,7 +1332,7 @@ public class DB_Protease extends DB_Conn {
 					
 									
 					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
-					int rsSizeC = csjavaC.length;
+					rsSizeC = csjavaC.length;
 					System.out.println(rsSizeC + "apres");
 //
 					if (rsSizeC > 0) {
@@ -1239,6 +1355,12 @@ public class DB_Protease extends DB_Conn {
 							i++;
 						}
 					}
+					} else {
+						kIntC = kIntN;	
+						intermediatecapacityarrayCterm = new ResultbySubstrateData[kIntC];
+						System.arraycopy(intermediatecapacityarrayNterm, 0, intermediatecapacityarrayCterm,
+								0, kIntN);
+					}
 					
 					if (rsSize==0 && rsSizeC ==0) {
 						csvalidity = "no";
@@ -1255,20 +1377,48 @@ public class DB_Protease extends DB_Conn {
 					int gaps = 1;
 					
 					//check CS in SQL 1 MM N term
+					if (!nTerm.contains("---")) {
 					for (int j=0; j<numismN1; j++) {
 					String cs = mismN1[j].getCs_pattern();
 					prequery = prequery + " OR CleavageSite_Sequence LIKE '" + cs + "'";
 					}
 					prequery = prequery.replaceFirst(" OR", "");
-					String queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					
+					String queryprotspecies = "null";
+					String querysubspecies = "null";
+					
+					if (proteasespecies.equals("Human")) {
+						queryprotspecies = "P_Species = 'Human'";
+					} else if (proteasespecies.equals("Mouse")) {
+						queryprotspecies = "P_Species = 'Mouse'";
+					} else if (proteasespecies.equals("Rat")) {
+						queryprotspecies = "P_Species = 'Rat'";
+					} else {
+						queryprotspecies = "";
+					}
+
+					if (substratespecies.equals("Human")) {
+						querysubspecies = "AND S_Species = 'Human' AND (";
+					} else if (substratespecies.equals("Mouse")) {
+						querysubspecies = "AND S_Species = 'Mouse' AND (";
+					} else if (substratespecies.equals("Rat")) {
+						querysubspecies = "AND S_Species = 'Rat' AND (";
+					} else {
+						querysubspecies = "";
+					}
+
+					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE "
+							+ queryprotspecies
+							+ querysubspecies
+							+ prequery + ")  ORDER BY P_Symbol";
 					System.out.println(queryCleavagesite);
 					
-					String terminus = nTerm;
-					String nOrC = "NTerm";
+					terminus = nTerm;
+					nOrC = "NTerm";
 					
 									
 					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
-					int rsSize = csjava.length;
+					rsSize = csjava.length;
 					System.out.println(rsSize + "apres");
 //
 					if (rsSize > 0) {
@@ -1294,15 +1444,49 @@ public class DB_Protease extends DB_Conn {
 							i++;
 						}
 					}
+					} else {
+						kIntN = kFirst;
+						intermediatecapacityarrayNterm = new ResultbySubstrateData[kIntN];
+						System.arraycopy(firstcapacityarray, 0, intermediatecapacityarrayNterm,
+								0, kFirst);
+					}
 					
 					//check CS in SQL 1 MM C term
 					prequery = "";
+					if (!cTerm.contains("---")) {
 					for (int j=0; j<numismC1; j++) {
 					String cs = mismC1[j].getCs_pattern();
 					prequery = prequery + " OR CleavageSite_Sequence LIKE '" + cs + "'";
 					}
 					prequery = prequery.replaceFirst(" OR", "");
-					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					
+					String queryprotspecies = "null";
+					String querysubspecies = "null";
+					
+					if (proteasespecies.equals("Human")) {
+						queryprotspecies = "P_Species = 'Human'";
+					} else if (proteasespecies.equals("Mouse")) {
+						queryprotspecies = "P_Species = 'Mouse'";
+					} else if (proteasespecies.equals("Rat")) {
+						queryprotspecies = "P_Species = 'Rat'";
+					} else {
+						queryprotspecies = "";
+					}
+
+					if (substratespecies.equals("Human")) {
+						querysubspecies = "AND S_Species = 'Human' AND (";
+					} else if (substratespecies.equals("Mouse")) {
+						querysubspecies = "AND S_Species = 'Mouse' AND (";
+					} else if (substratespecies.equals("Rat")) {
+						querysubspecies = "AND S_Species = 'Rat' AND (";
+					} else {
+						querysubspecies = "";
+					}
+
+					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE "
+							+ queryprotspecies
+							+ querysubspecies
+							+ prequery + ")  ORDER BY P_Symbol";
 					System.out.println(queryCleavagesite);
 					
 					terminus = cTerm;
@@ -1310,7 +1494,7 @@ public class DB_Protease extends DB_Conn {
 					
 									
 					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
-					int rsSizeC = csjavaC.length;
+					rsSizeC = csjavaC.length;
 					System.out.println(rsSizeC + "apres");
 //
 					if (rsSizeC > 0) {
@@ -1332,6 +1516,12 @@ public class DB_Protease extends DB_Conn {
 									csjavaC[l], i, l, pepSubstrateId, pepStart, pepEnd, pepNumber, gaps);
 							i++;
 						}
+					}
+					} else {
+						kIntC = kIntN;
+						intermediatecapacityarrayCterm = new ResultbySubstrateData[kIntC];
+						System.arraycopy(intermediatecapacityarrayNterm, 0, intermediatecapacityarrayCterm,
+								0, kIntN);
 					}
 					
 					if (rsSize==0 && rsSizeC ==0) {
@@ -1348,20 +1538,48 @@ public class DB_Protease extends DB_Conn {
 					int gaps = 2;
 					
 					//check CS in SQL 2 MM N term
+					if (!nTerm.contains("---")) {
 					for (int j=0; j<numismN2; j++) {
 					String cs = mismN2[j].getCs_pattern();
 					prequery = prequery + " OR CleavageSite_Sequence LIKE '" + cs + "'";
 					}
 					prequery = prequery.replaceFirst(" OR", "");
-					String queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					
+					String queryprotspecies = "null";
+					String querysubspecies = "null";
+					
+					if (proteasespecies.equals("Human")) {
+						queryprotspecies = "P_Species = 'Human'";
+					} else if (proteasespecies.equals("Mouse")) {
+						queryprotspecies = "P_Species = 'Mouse'";
+					} else if (proteasespecies.equals("Rat")) {
+						queryprotspecies = "P_Species = 'Rat'";
+					} else {
+						queryprotspecies = "";
+					}
+
+					if (substratespecies.equals("Human")) {
+						querysubspecies = "AND S_Species = 'Human' AND (";
+					} else if (substratespecies.equals("Mouse")) {
+						querysubspecies = "AND S_Species = 'Mouse' AND (";
+					} else if (substratespecies.equals("Rat")) {
+						querysubspecies = "AND S_Species = 'Rat' AND (";
+					} else {
+						querysubspecies = "";
+					}
+
+					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE "
+							+ queryprotspecies
+							+ querysubspecies
+							+ prequery + ")  ORDER BY P_Symbol";
 					System.out.println(queryCleavagesite);
 					
-					String terminus = nTerm;
-					String nOrC = "NTerm";
+					terminus = nTerm;
+					nOrC = "NTerm";
 					
 									
 					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
-					int rsSize = csjava.length;
+					rsSize = csjava.length;
 					System.out.println(rsSize + "apres");
 //
 					if (rsSize > 0) {
@@ -1387,15 +1605,49 @@ public class DB_Protease extends DB_Conn {
 							i++;
 						}
 					}
-					
+					} else {
+						kIntN = kFirst;
+						intermediatecapacityarrayNterm = new ResultbySubstrateData[kIntN];
+						System.arraycopy(firstcapacityarray, 0, intermediatecapacityarrayNterm,
+								0, kFirst);
+
+					}
 					//check CS in SQL 2 MM C term
 					prequery = "";
+					if (!cTerm.contains("---")) {
 					for (int j=0; j<numismC2; j++) {
 					String cs = mismC2[j].getCs_pattern();
 					prequery = prequery + " OR CleavageSite_Sequence LIKE '" + cs + "'";
 					}
 					prequery = prequery.replaceFirst(" OR", "");
-					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					
+					String queryprotspecies = "null";
+					String querysubspecies = "null";
+					
+					if (proteasespecies.equals("Human")) {
+						queryprotspecies = "P_Species = 'Human'";
+					} else if (proteasespecies.equals("Mouse")) {
+						queryprotspecies = "P_Species = 'Mouse'";
+					} else if (proteasespecies.equals("Rat")) {
+						queryprotspecies = "P_Species = 'Rat'";
+					} else {
+						queryprotspecies = "";
+					}
+
+					if (substratespecies.equals("Human")) {
+						querysubspecies = "AND S_Species = 'Human' AND (";
+					} else if (substratespecies.equals("Mouse")) {
+						querysubspecies = "AND S_Species = 'Mouse' AND (";
+					} else if (substratespecies.equals("Rat")) {
+						querysubspecies = "AND S_Species = 'Rat' AND (";
+					} else {
+						querysubspecies = "";
+					}
+
+					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE "
+							+ queryprotspecies
+							+ querysubspecies
+							+ prequery + ")  ORDER BY P_Symbol";
 					System.out.println(queryCleavagesite);
 					
 					terminus = cTerm;
@@ -1403,7 +1655,7 @@ public class DB_Protease extends DB_Conn {
 					
 									
 					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
-					int rsSizeC = csjavaC.length;
+					rsSizeC = csjavaC.length;
 					System.out.println(rsSizeC + "apres");
 //
 					if (rsSizeC > 0) {
@@ -1426,7 +1678,12 @@ public class DB_Protease extends DB_Conn {
 							i++;
 						}
 					}
-					
+					} else {
+						kIntC = kIntN;
+						intermediatecapacityarrayCterm = new ResultbySubstrateData[kIntC];
+						System.arraycopy(intermediatecapacityarrayNterm, 0, intermediatecapacityarrayCterm,
+								0, kIntN);
+					}
 					if (rsSize==0 && rsSizeC ==0) {
 						csvalidity = "no";
 					} else {
@@ -1439,21 +1696,49 @@ public class DB_Protease extends DB_Conn {
 				} else if (mismatch == 3) {
 					int gaps = 3;
 					
-					//check CS in SQL 2 MM N term
+					//check CS in SQL 3 MM N term
+					if (!nTerm.contains("---")) {
 					for (int j=0; j<numismN3; j++) {
 					String cs = mismN3[j].getCs_pattern();
 					prequery = prequery + " OR CleavageSite_Sequence LIKE '" + cs + "'";
 					}
 					prequery = prequery.replaceFirst(" OR", "");
-					String queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					
+					String queryprotspecies = "null";
+					String querysubspecies = "null";
+					
+					if (proteasespecies.equals("Human")) {
+						queryprotspecies = "P_Species = 'Human'";
+					} else if (proteasespecies.equals("Mouse")) {
+						queryprotspecies = "P_Species = 'Mouse'";
+					} else if (proteasespecies.equals("Rat")) {
+						queryprotspecies = "P_Species = 'Rat'";
+					} else {
+						queryprotspecies = "";
+					}
+
+					if (substratespecies.equals("Human")) {
+						querysubspecies = "AND S_Species = 'Human' AND (";
+					} else if (substratespecies.equals("Mouse")) {
+						querysubspecies = "AND S_Species = 'Mouse' AND (";
+					} else if (substratespecies.equals("Rat")) {
+						querysubspecies = "AND S_Species = 'Rat' AND (";
+					} else {
+						querysubspecies = "";
+					}
+
+					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE "
+							+ queryprotspecies
+							+ querysubspecies
+							+ prequery + ")  ORDER BY P_Symbol";
 					System.out.println(queryCleavagesite);
 					
-					String terminus = nTerm;
-					String nOrC = "NTerm";
+					terminus = nTerm;
+					nOrC = "NTerm";
 					
 									
 					CsJava_1[] csjava = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
-					int rsSize = csjava.length;
+					rsSize = csjava.length;
 					System.out.println(rsSize + "apres");
 //
 					if (rsSize > 0) {
@@ -1479,15 +1764,51 @@ public class DB_Protease extends DB_Conn {
 							i++;
 						}
 					}
+					} else {
+						kIntN = kFirst;
+						System.out.println(kFirst + "kFirst");
+						System.out.println(kIntN + "kInt");
+						intermediatecapacityarrayNterm = new ResultbySubstrateData[kIntN];
+						System.arraycopy(firstcapacityarray, 0, intermediatecapacityarrayNterm,
+								0, kFirst);
+					}
 					
 					//check CS in SQL 3 MM C term
 					prequery = "";
+					if (!cTerm.contains("---")) {
 					for (int j=0; j<numismC3; j++) {
 					String cs = mismC3[j].getCs_pattern();
 					prequery = prequery + " OR CleavageSite_Sequence LIKE '" + cs + "'";
 					}
 					prequery = prequery.replaceFirst(" OR", "");
-					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE " + prequery +"  ORDER BY P_Symbol";
+					
+					String queryprotspecies = "null";
+					String querysubspecies = "null";
+					
+					if (proteasespecies.equals("Human")) {
+						queryprotspecies = "P_Species = 'Human'";
+					} else if (proteasespecies.equals("Mouse")) {
+						queryprotspecies = "P_Species = 'Mouse'";
+					} else if (proteasespecies.equals("Rat")) {
+						queryprotspecies = "P_Species = 'Rat'";
+					} else {
+						queryprotspecies = "";
+					}
+
+					if (substratespecies.equals("Human")) {
+						querysubspecies = "AND S_Species = 'Human' AND (";
+					} else if (substratespecies.equals("Mouse")) {
+						querysubspecies = "AND S_Species = 'Mouse' AND (";
+					} else if (substratespecies.equals("Rat")) {
+						querysubspecies = "AND S_Species = 'Rat' AND (";
+					} else {
+						querysubspecies = "";
+					}
+
+					queryCleavagesite = "SELECT * FROM CLEAVAGESITE WHERE "
+							+ queryprotspecies
+							+ querysubspecies
+							+ prequery + ")  ORDER BY P_Symbol";
 					System.out.println(queryCleavagesite);
 					
 					terminus = cTerm;
@@ -1495,7 +1816,7 @@ public class DB_Protease extends DB_Conn {
 					
 									
 					CsJava_1[] csjavaC = getCsMISMATCHinSql(queryCleavagesite, pepSubstrateId, pepStart, pepEnd, searchnumber, terminus, nOrC, pepsequence );
-					int rsSizeC = csjavaC.length;
+					rsSizeC = csjavaC.length;
 					System.out.println(rsSizeC + "apres");
 //
 					if (rsSizeC > 0) {
@@ -1517,6 +1838,12 @@ public class DB_Protease extends DB_Conn {
 									csjavaC[l], i, l, pepSubstrateId, pepStart, pepEnd, pepNumber, gaps);
 							i++;
 						}
+					}
+					} else {
+						kIntC = kIntN;
+						intermediatecapacityarrayCterm = new ResultbySubstrateData[kIntC];
+						System.arraycopy(intermediatecapacityarrayNterm, 0, intermediatecapacityarrayCterm,
+								0, kIntN);
 					}
 					if (rsSize==0 && rsSizeC ==0) {
 						csvalidity = "no";
@@ -1536,14 +1863,15 @@ public class DB_Protease extends DB_Conn {
 				k = kLast;
 				
 				}
-				
 		}
 
+		
 		// return the array
-		return lastcapacityarray;
-
+				return lastcapacityarray;
+		
 	}
-
+	
+	
 	private ResultbySubstrateData[] populateStruPepUni(String substratesymbol,
 			String substrateuni, String substratename, String substratetaxon,
 			ResultbySubstrateData[] intermediatecapacityarray,
@@ -1786,6 +2114,7 @@ public class DB_Protease extends DB_Conn {
 		intermediatecapacityarray[i].setCSInput_end(pepEnd);
 		intermediatecapacityarray[i].setCSInput_number(pepNumber);
 		intermediatecapacityarray[i].CS_database = csJava_1.CleavageSite_Sequence;
+		intermediatecapacityarray[i].CS_substratespecies = csJava_1.CleavageSite_substratespecies;
 		intermediatecapacityarray[i].CS_databasesubstrate = csJava_1.CleavageSite_substratesymbol;
 		intermediatecapacityarray[i].CS_mismatch = csJava_1.CleavageSite_mismatch;
 		peptide.sequence = csJava_1.pepsequence;
@@ -1852,4 +2181,6 @@ public class DB_Protease extends DB_Conn {
 		intermediatecapacityarray[i].setNature("peptide");
 
 	}
+	
+	
 }
